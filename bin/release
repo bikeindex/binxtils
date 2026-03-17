@@ -31,3 +31,4 @@ git push --tags
 gem build binxtils.gemspec
 gem push "binxtils-$VERSION.gem" --host https://rubygems.org
 rm "binxtils-$VERSION.gem"
+gh release create "v$VERSION" --title "v$VERSION" --generate-notes
