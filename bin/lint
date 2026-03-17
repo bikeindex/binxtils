@@ -24,6 +24,7 @@ FileUtils.chdir APP_ROOT do
 
     system!("bundle exec standardrb --no-fix")
     system!("bundle exec rubocop -c .rubocop_custom.yml")
+    system!("bundle exec reek")
   end
 
   if file_args.any?

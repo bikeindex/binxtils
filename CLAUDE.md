@@ -1,10 +1,8 @@
-Binxtils is a Ruby Gem
-
-[mise](https://mise.jdx.dev/) is used for Ruby and Node version management.
+Binxtils is a Ruby Gem — Bike Index utility modules.
 
 ## Code style
 
-Ruby is formatted with the standard gem. Run `bin/lint` to automatically format the code.
+Ruby is formatted with the standard gem and reek. Run `bin/lint` to automatically format the code, or `bin/lint --no-fix` to check without fixing.
 
 ### Code guidelines:
 
@@ -14,15 +12,14 @@ Ruby is formatted with the standard gem. Run `bin/lint` to automatically format 
 - Don't monkeypatch
 - make methods private if possible (use `conceal :method_name` in functionable modules)
 - Omit named arguments' values from hashes (ie prefer `{x:, y:}` instead of `{x: x, y: y}`)
-- Prefer less code, by character count (excluding whitespace and comments). Use `bin/char_count {FILE OR FOLDER}` to get the non-whitespace character count
+- Prefer less code, by character count (excluding whitespace and comments)
 - prefer un-abbreviated variable names
 
 ## Testing
 
-This project uses Rspec for tests. All business logic should be tested.
+This project uses Rspec for tests. Run `bin/rspec`. All business logic should be tested.
 
 - Tests should either: help make the code correct now or prevent bugs in the future. Don't add tests that don't do one of those things.
 - Avoid mocking objects
-  - If making external requests, use VCR. Don't manually write VCR cassettes, record them by running the tests.
 - Use `context` and `let` to isolate what varies between examples.
   - Each `it` block should live in a `context` that names the condition, with `let` overrides for only what differs in that case. Avoid repeating setup across sibling `it` blocks.
