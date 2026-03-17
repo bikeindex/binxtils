@@ -24,7 +24,6 @@ FileUtils.chdir APP_ROOT do
 
     system!("bundle exec standardrb --no-fix")
     system!("bundle exec rubocop -c .rubocop_custom.yml")
-    system!("bundle exec reek")
   elsif file_args.any?
     file_args.each do |file|
       system!("bundle exec standardrb --fix #{file}")
@@ -33,6 +32,5 @@ FileUtils.chdir APP_ROOT do
   else
     system!("bundle exec standardrb --fix")
     system!("bundle exec rubocop -c .rubocop_custom.yml -A")
-    system!("bundle exec reek")
   end
 end

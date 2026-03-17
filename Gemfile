@@ -6,7 +6,6 @@ gemspec
 
 group :development do
   gem "rake"
-  gem "reek"
   gem "standard"
 end
 

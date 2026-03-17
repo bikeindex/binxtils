@@ -2,7 +2,7 @@ Binxtils is a Ruby Gem — Bike Index utility modules.
 
 ## Code style
 
-Ruby is formatted with the standard gem and reek. Run `bin/lint` to automatically format the code, or `bin/lint --no-fix` to check without fixing.
+Ruby is formatted with the standard gem. Run `bin/lint` to automatically format the code, or `bin/lint --no-fix` to check without fixing.
 
 ### Code guidelines:
 
