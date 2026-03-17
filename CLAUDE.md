@@ -12,7 +12,7 @@ Ruby is formatted with the standard gem and reek. Run `bin/lint` to automaticall
 - Don't monkeypatch
 - make methods private if possible (use `conceal :method_name` in functionable modules)
 - Omit named arguments' values from hashes (ie prefer `{x:, y:}` instead of `{x: x, y: y}`)
-- Prefer less code, by character count (excluding whitespace and comments)
+- Prefer less code, by character count (excluding whitespace and comments). Use `bin/char_count {FILE OR FOLDER}` to get the non-whitespace character count
 - prefer un-abbreviated variable names
 
 ## Testing
