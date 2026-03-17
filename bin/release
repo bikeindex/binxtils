@@ -2,9 +2,9 @@
 
 VERSION=$1
 
-sed -i '' "s/spec.version = \".*\"/spec.version = \"$VERSION\"/" ./binxtils.gemspec
+printf "# frozen_string_literal: true\n\nmodule Binxtils\n  VERSION = \"$VERSION\"\nend\n" > ./lib/binxtils/version.rb
 bundle
-git add Gemfile.lock binxtils.gemspec
+git add Gemfile.lock lib/binxtils/version.rb
 git commit -m "Bump version for $VERSION"
 git push
 git tag v$VERSION
