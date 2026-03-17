@@ -4,4 +4,4 @@
 APP_ROOT = File.expand_path("..", __dir__)
 Dir.chdir(APP_ROOT)
 
-exec("bin/rake", "char_count", *ARGV)
+exec("bin/rake", "binxtils:char_count", *ARGV)
