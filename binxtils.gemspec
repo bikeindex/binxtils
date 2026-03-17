@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "lib/binxtils/version"
+
 Gem::Specification.new do |spec|
   spec.name = "binxtils"
   spec.authors = ["Bike Index"]
@@ -14,7 +16,7 @@ Gem::Specification.new do |spec|
     "rubygems_mfa_required" => "true"
   }
 
-  spec.version = "0.1.0"
+  spec.version = Binxtils::VERSION
 
   spec.required_ruby_version = ">= 3.4"
 
