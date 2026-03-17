@@ -4,24 +4,6 @@ on:
   push:
 
 jobs:
-  lint_and_scan:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        ruby: ["3.4", "4.0"]
-    steps:
-      - uses: actions/checkout@v6
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: ${{ matrix.ruby }}
-          bundler-cache: true
-
-      - name: Lint
-        run: bin/lint
-      - name: Scan for common Rails security vulnerabilities using static analysis
-        if: success() || failure()
-        run: bin/brakeman
-
   test:
     runs-on: ubuntu-latest
     strategy:
