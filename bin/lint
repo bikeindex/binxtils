@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 
 # To test linting, rather than automatically fix it, set LINT_TEST
-# NOTE: CI doesn't actually use bin/lint, it manually calls each of the commands for better output
 #
 cli_args = ARGV
 lint_test = ENV["LINT_TEST"] == "true" || cli_args.include?("--no-fix")

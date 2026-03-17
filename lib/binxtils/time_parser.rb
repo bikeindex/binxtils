@@ -2,7 +2,7 @@
 
 module Binxtils
   module TimeParser
-    extend Functionable
+  extend Functionable
 
     EARLIEST_YEAR = 1900
     LATEST_YEAR = Time.current.year + 100
