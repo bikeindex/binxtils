@@ -3,6 +3,11 @@
 Gemfile.lock
 pkg
 tmp
+.ruby-lsp/
+
+# Ignore ruby version files
+.tool-versions
+.ruby-version
 
 # Ignore .claude settings
 .claude/
