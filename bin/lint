@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-# To test linting, rather than automatically fix it, set LINT_TEST
+# To test linting, rather than automatically fix it, set LINT_TEST or pass --no-fix
 #
 cli_args = ARGV
 lint_test = ENV["LINT_TEST"] == "true" || cli_args.include?("--no-fix")
