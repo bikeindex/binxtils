@@ -16,3 +16,5 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
       - run: bin/rspec
+      - name: Lint
+        run: bin/lint --no-fix
