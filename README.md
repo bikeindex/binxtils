@@ -1,6 +1,10 @@
 # Binxtils
 
-Bike Index utility modules, extracted as a gem.
+Bike Index utility modules. Install it by adding the following line to your Gemfile
+
+```ruby
+gem "binxtils"
+```
 
 ## Modules
 
