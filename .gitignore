@@ -9,5 +9,7 @@ tmp
 .tool-versions
 .ruby-version
 
+node_modules/
+
 # Ignore .claude settings
 .claude/
