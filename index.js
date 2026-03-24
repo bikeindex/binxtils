@@ -38,7 +38,7 @@ export default class TimeLocalizer {
     this.localTimezone = window.localTimezone
     this.now = DateTime.now().setZone(this.localTimezone)
     // Create all DateTime instances with the local timezone
-    this.yesterdayStart = this.now.minus({ days: 1 }).startOf('day') - 1
+    this.yesterdayStart = this.now.minus({ days: 1 }).startOf('day').minus({ milliseconds: 1 })
     this.todayStart = this.now.startOf('day')
     this.todayEnd = this.now.endOf('day')
     this.tomorrowEnd = this.now.plus({ days: 1 }).endOf('day')
@@ -54,7 +54,7 @@ export default class TimeLocalizer {
   ) {
     const time = this.parse(String(timeString).trim())
 
-    if (time === null) {
+    if (time === null || !time.isValid) {
       return '<span></span>'
     }
     // If singleFormat was passed as true, override with that, otherwise default to window format
@@ -110,7 +110,7 @@ export default class TimeLocalizer {
     el.classList.add('localizedTime')
 
     // If we couldn't parse the time, exit
-    if (!(text.length > 0) || time === null) {
+    if (!(text.length > 0) || time === null || !time.isValid) {
       return
     }
     el.innerHTML = this.localizedDateText(
@@ -143,7 +143,7 @@ export default class TimeLocalizer {
   renderWithoutDate (time) {
     if (this.onlyTodayWithoutDate) {
       // If it's in the past 4 hours (in milliseconds), return true (so e.g. it returns 11:30pm at 12:30pm)
-      return (time < this.now && time > (this.now.minus(14400000))) || (time < this.todayEnd && time > this.todayStart)
+      return (time < this.now && time > this.now.minus({ hours: 4 })) || (time < this.todayEnd && time > this.todayStart)
     } else {
       return (time < this.tomorrowEnd && time > this.yesterdayStart)
     }
@@ -209,24 +209,22 @@ export default class TimeLocalizer {
 
   setDateInputField (el) {
     const text = el.getAttribute('data-initialtime')
-    if (text.length > 0) {
+    if (text?.length > 0) {
       // Format that at least Chrome expects for field
       el.value = DateTime.fromISO(text).toFormat('yyyy-MM-dd\'T\'HH:mm')
     }
   }
 
   parse (text) {
+    if (text === null) {
+      return null
+    }
     // If time is only a number, parse as a timestamp
     // Otherwise, parse as ISO_8601 which is the default time string
     if (/^\d+$/.test(text)) {
       return DateTime.fromSeconds(parseInt(text))
-    } else if (text !== null) {
-      return DateTime.fromISO(text)
     }
-    // REMOVED time.isValid because time isn't defined
-    if (text === null) {
-      return null
-    }
+    return DateTime.fromISO(text)
   }
 
   writeTimezone (el) {
