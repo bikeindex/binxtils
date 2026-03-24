@@ -1,13 +1,3 @@
-// TODO: add ability to show in og time zone
-// 2026-1-4 - Updated writeTimezone to use abbreviated timezone
-// 2025-8-6 - switch to am/pm lowercase, without a preceding space
-// 2025-5-15 - switch to using .localizeTime class (instead of .convertTime)
-// 2025-5-12 - add onlyTodayWithoutDate option
-// 2024-11-24 - refactor code to better take advantage of luxon
-// 2024-11-13 - switch moment to luxon!
-// 2023-8-25 - Updated withPreposition
-// 2023-7-30 - Added setDateInputField
-
 import { DateTime } from 'luxon'
 
 // TimeLocalizer updates all HTML elements with class '.localizeTime', making them:
