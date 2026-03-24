@@ -50,6 +50,10 @@ describe('TimeLocalizer', () => {
     it('defaults singleFormat to false', () => {
       expect(localizer.singleFormat).toBe(false)
     })
+
+    it('stores yesterdayStart as a DateTime', () => {
+      expect(localizer.yesterdayStart).toBeInstanceOf(DateTime)
+    })
   })
 
   describe('parse', () => {
@@ -70,6 +74,10 @@ describe('TimeLocalizer', () => {
 
     it('returns invalid DateTime for empty string', () => {
       expect(localizer.parse('').isValid).toBe(false)
+    })
+
+    it('returns invalid DateTime for garbage input', () => {
+      expect(localizer.parse('hello').isValid).toBe(false)
     })
   })
 
@@ -300,14 +308,19 @@ describe('TimeLocalizer', () => {
         .toBe('<span title="January 15, 2026 at 4:30:00am CST">Jan 15</span>')
     })
 
-    it('returns Invalid DateTime for empty string', () => {
+    it('returns empty span for empty string', () => {
       expect(localizer.localizedTimeHtml('', {}))
-        .toBe('<span title="Invalid DateTime">Invalid DateTime</span>')
+        .toBe('<span></span>')
     })
 
-    it('returns Invalid DateTime for null input (coerced to string)', () => {
+    it('returns empty span for null input', () => {
       expect(localizer.localizedTimeHtml(null, {}))
-        .toBe('<span title="Invalid DateTime">Invalid DateTime</span>')
+        .toBe('<span></span>')
+    })
+
+    it('returns empty span for garbage input', () => {
+      expect(localizer.localizedTimeHtml('hello', {}))
+        .toBe('<span></span>')
     })
   })
 
@@ -373,6 +386,28 @@ describe('TimeLocalizer', () => {
 
       // fromISO converts to system timezone (CDT = UTC-5)
       expect(el.value).toBe('2026-03-23T05:30')
+    })
+
+    it('does not crash when dateInputUpdateZone has no data-initialtime', () => {
+      const el = document.createElement('input')
+      el.className = 'dateInputUpdateZone'
+      document.body.appendChild(el)
+
+      localizer.localize()
+
+      expect(el.value).toBe('')
+    })
+
+    it('handles garbage text content gracefully', () => {
+      const el = document.createElement('span')
+      el.className = 'localizeTime'
+      el.textContent = 'not a date'
+      document.body.appendChild(el)
+
+      localizer.localize()
+
+      expect(el.classList.contains('localizedTime')).toBe(true)
+      expect(el.innerHTML).toBe('not a date')
     })
 
     it('handles empty text content gracefully', () => {
