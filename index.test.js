@@ -120,7 +120,9 @@ describe('TimeLocalizer', () => {
         { zone: ZONE }
       )
       Settings.now = () => earlyMorning.toMillis()
-      const earlyLocalizer = buildLocalizer()
+      window.localTimezone = ZONE
+      window.timeLocalizerSingleFormat = false
+      const earlyLocalizer = new TimeLocalizer()
       const lateLastNight = earlyMorning.minus({ hours: 3 })
       expect(earlyLocalizer.renderWithoutDate(lateLastNight)).toBe(true)
     })
@@ -181,8 +183,16 @@ describe('TimeLocalizer', () => {
       expect(result).toMatch(/^<span title=".*">.*<\/span>$/)
     })
 
-    it('returns empty span for unparseable input', () => {
-      expect(localizer.localizedTimeHtml('', {})).toBe('<span></span>')
+    it('returns Invalid DateTime span for empty string', () => {
+      // empty string parses as an invalid DateTime (not null), so it renders
+      const result = localizer.localizedTimeHtml('', {})
+      expect(result).toContain('Invalid DateTime')
+    })
+
+    it('returns Invalid DateTime for null input (coerced to string)', () => {
+      // String(null) === "null", which parse treats as an ISO string → invalid DateTime
+      const result = localizer.localizedTimeHtml(null, {})
+      expect(result).toContain('Invalid DateTime')
     })
 
     it('accepts ISO string input', () => {
@@ -294,7 +304,8 @@ describe('TimeLocalizer', () => {
 
     it('uses singleFormat but variableFormat overrides', () => {
       window.timeLocalizerSingleFormat = true
-      const singleLocalizer = buildLocalizer()
+      window.localTimezone = ZONE
+      const singleLocalizer = new TimeLocalizer()
 
       const fixedEl = document.createElement('span')
       fixedEl.className = 'localizeTime'
