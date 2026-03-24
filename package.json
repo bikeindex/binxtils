@@ -10,8 +10,15 @@
   "files": [
     "index.js"
   ],
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
     "luxon": "^3.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0",
+    "jsdom": "^26.0.0"
   },
   "license": "MIT",
   "repository": {
