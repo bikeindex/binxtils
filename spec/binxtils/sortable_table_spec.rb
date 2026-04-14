@@ -79,4 +79,28 @@ RSpec.describe Binxtils::SortableTable do
       expect(controller.default_column).to eq "created_at"
     end
   end
+
+  describe "current_time_range_column" do
+    context "sort_column is a time range column" do
+      let(:params) { {sort: "updated_at"} }
+
+      it "returns sort_column" do
+        expect(controller.current_time_range_column).to eq "updated_at"
+      end
+    end
+
+    context "sort_column is not a time range column" do
+      let(:params) { {sort: "name"} }
+
+      it "returns first permitted time range column" do
+        expect(controller.current_time_range_column).to eq "created_at"
+      end
+    end
+  end
+
+  describe "permitted_time_range_columns" do
+    it "returns created_at and updated_at" do
+      expect(controller.permitted_time_range_columns).to eq %w[created_at updated_at]
+    end
+  end
 end
