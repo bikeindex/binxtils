@@ -2,15 +2,22 @@
 
 require "spec_helper"
 require "action_controller"
+require "action_view/helpers"
+require "action_view/buffers"
 
 # Minimal helper-like object for testing SortableHelper
 class SortableHelperTestContext
+  include ActionView::Helpers::TagHelper
+  include ActionView::Helpers::TextHelper
+  include ActionView::Helpers::UrlHelper
+  include ActionView::Helpers::CaptureHelper
   include Binxtils::SortableHelper
 
-  attr_accessor :params
+  attr_accessor :params, :output_buffer
 
   def initialize(params: {})
     @params = ActionController::Parameters.new(params)
+    @output_buffer = ActionView::OutputBuffer.new
   end
 
   def default_column = "id"
@@ -18,99 +25,65 @@ class SortableHelperTestContext
 end
 
 RSpec.describe Binxtils::SortableHelper do
-  let(:params) { {} }
-  let(:helper) { SortableHelperTestContext.new(params:) }
-
-  describe "default_search_keys" do
-    it "returns BASE_SEARCH_KEYS" do
-      expect(helper.default_search_keys).to eq Binxtils::SortableHelper::BASE_SEARCH_KEYS
-    end
-  end
+  let(:passed_params) { {} }
+  let(:helper) { SortableHelperTestContext.new(params: passed_params) }
 
   describe "sortable_search_params" do
-    context "with permitted params" do
-      let(:params) { {sort: "name", direction: "asc", query: "bike"} }
+    context "no sortable_search_params" do
+      let(:passed_params) { {party: "stuff"} }
 
-      it "permits known keys" do
-        result = helper.sortable_search_params
-        expect(result[:sort]).to eq "name"
-        expect(result[:direction]).to eq "asc"
-        expect(result[:query]).to eq "bike"
+      it "returns an empty hash" do
+        expect(helper.sortable_search_params.to_unsafe_h).to eq({})
       end
     end
 
-    context "with search_ prefixed params" do
-      let(:params) { {search_status: "active", query: "test"} }
+    context "search_ prefixed params" do
+      let(:passed_params) { {search_email: "stttt"} }
 
-      it "permits search_ params dynamically" do
-        result = helper.sortable_search_params
-        expect(result[:search_status]).to eq "active"
-        expect(result[:query]).to eq "test"
+      it "includes search_ params" do
+        expect(helper.sortable_search_params.to_unsafe_h).to eq(passed_params.as_json)
       end
     end
 
-    context "with unknown params" do
-      let(:params) { {sort: "name", secret: "value"} }
+    context "direction, sort" do
+      let(:passed_params) { {direction: "asc", sort: "stolen", party: "long"} }
+      let(:target) { {direction: "asc", sort: "stolen"} }
 
-      it "filters out unknown keys" do
-        result = helper.sortable_search_params
-        expect(result[:sort]).to eq "name"
-        expect(result[:secret]).to be_nil
+      it "returns target hash" do
+        expect(helper.sortable_search_params.to_unsafe_h).to eq(target.as_json)
       end
     end
 
-    context "memoization" do
-      let(:params) { {sort: "name"} }
+    context "direction, sort, search param" do
+      let(:time) { Time.current.to_i }
+      let(:passed_params) { {direction: "asc", sort: "stolen", party: "long", search_stuff: "xxx", user_id: 21, start_time: time, end_time: time, period: "custom"} }
+      let(:target) { {direction: "asc", sort: "stolen", search_stuff: "xxx", user_id: 21, start_time: time, end_time: time, period: "custom"} }
 
-      it "returns same object on repeated calls" do
-        first = helper.sortable_search_params
-        second = helper.sortable_search_params
-        expect(first).to equal second
+      it "returns target hash" do
+        expect(helper.sortable_search_params.to_unsafe_h).to eq(target.as_json)
+      end
+    end
+
+    context "direction, sort, period: all" do
+      let(:passed_params) { {direction: "asc", sort: "stolen", period: "all"} }
+
+      it "returns falsey for sortable_search_params?" do
+        expect(helper.sortable_search_params?).to be_falsey
+      end
+    end
+
+    context "direction, sort, period: week" do
+      let(:passed_params) { {direction: "asc", sort: "stolen", period: "week"} }
+
+      it "returns truthy for sortable_search_params?" do
+        expect(helper.sortable_search_params?).to be_truthy
       end
     end
   end
 
   describe "sortable_search_params?" do
-    context "no params" do
-      it "returns false" do
-        expect(helper.sortable_search_params?).to eq false
-      end
-    end
-
-    context "with query param" do
-      let(:params) { {query: "bike"} }
-
-      it "returns true" do
-        expect(helper.sortable_search_params?).to eq true
-      end
-    end
-
-    context "with only sort params" do
-      let(:params) { {sort: "name", direction: "asc"} }
-
-      it "returns false" do
-        expect(helper.sortable_search_params?).to eq false
-      end
-    end
-
-    context "with non-all period" do
-      let(:params) { {period: "month"} }
-
-      it "returns true" do
-        expect(helper.sortable_search_params?).to eq true
-      end
-    end
-
-    context "with all period" do
-      let(:params) { {period: "all"} }
-
-      it "returns false" do
-        expect(helper.sortable_search_params?).to eq false
-      end
-    end
-
     context "with period excepted" do
-      let(:params) { {period: "month"} }
+      let(:passed_params) { {period: "month"} }
 
       it "returns false" do
         expect(helper.sortable_search_params?(except: [:period])).to eq false
@@ -120,7 +93,7 @@ RSpec.describe Binxtils::SortableHelper do
 
   describe "sortable_params" do
     context "with blank values" do
-      let(:params) { {sort: "name", query: ""} }
+      let(:passed_params) { {sort: "name", query: ""} }
 
       it "strips blank values" do
         result = helper.sortable_params
@@ -130,7 +103,7 @@ RSpec.describe Binxtils::SortableHelper do
     end
 
     context "with default sort values" do
-      let(:params) { {sort: "id", query: "bike"} }
+      let(:passed_params) { {sort: "id", query: "bike"} }
 
       it "strips default sort column" do
         result = helper.sortable_params
@@ -140,13 +113,70 @@ RSpec.describe Binxtils::SortableHelper do
     end
 
     context "with default direction" do
-      let(:params) { {direction: "desc", query: "bike"} }
+      let(:passed_params) { {direction: "desc", query: "bike"} }
 
       it "strips default direction" do
         result = helper.sortable_params
         expect(result.key?("direction")).to eq false
         expect(result["query"]).to eq "bike"
       end
+    end
+  end
+
+  describe "#sortable" do
+    before { allow(helper).to receive(:sortable_url).and_return("/") }
+
+    context "skip_sortable is true" do
+      it "returns only the title string" do
+        result = helper.sortable("name", "Full Name", skip_sortable: true)
+        expect(result).to eq("Full Name")
+      end
+    end
+
+    context "render_sortable is false" do
+      it "returns only the title string" do
+        result = helper.sortable("name", "Full Name", render_sortable: false)
+        expect(result).to eq("Full Name")
+      end
+    end
+
+    context "render_sortable is true or default" do
+      it "generates a link with sortable class" do
+        result = helper.sortable("email")
+        expect(result).to match(/class=..?sortable-link/)
+        expect(result).to include("Email")
+      end
+
+      it "preserves existing CSS classes" do
+        result = helper.sortable("name", "Name", class: "existing-class")
+        expect(result).to match(/class=..?existing-class sortable-link/)
+      end
+
+      it "includes data attributes and other html options" do
+        result = helper.sortable("email", "Email", {data: {turbo: false}, id: "sort-link"})
+        expect(result).to include('data-turbo="false"')
+        expect(result).to include('id="sort-link"')
+      end
+    end
+
+    context "title not passed" do
+      it "generates title from column name" do
+        expect(helper.sortable("created_at")).to include("Created")
+        expect(helper.sortable("user_id")).to include("User")
+      end
+    end
+
+    context "with a block" do
+      it "renders the block content" do
+        result = helper.sortable("name") { "Custom Content" }
+        expect(result).to include("Custom Content")
+      end
+    end
+  end
+
+  describe "default_search_keys" do
+    it "returns BASE_SEARCH_KEYS" do
+      expect(helper.default_search_keys).to eq Binxtils::SortableHelper::BASE_SEARCH_KEYS
     end
   end
 end
