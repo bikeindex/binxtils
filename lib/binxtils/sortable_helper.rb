@@ -2,16 +2,19 @@
 
 module Binxtils
   module SortableHelper
-    DEFAULT_SEARCH_KEYS = [
+    BASE_SEARCH_KEYS = [
       :direction, :sort, # sorting params
-      :period, :start_time, :end_time, :time_range_column, :render_chart, # Time period params
-      :user_id, :organization_id, :query, # General search params
-      :serial, :stolenness, :location, :distance, :primary_activity, query_items: [] # Bike searching params
+      :period, :start_time, :end_time, :render_chart, # Time period params
+      :user_id, :query, :per_page # General search params
     ].freeze
 
     # Set defaults, required for testing
     def sort_column = "id"
     def sort_direction = "desc"
+
+    def default_search_keys
+      BASE_SEARCH_KEYS
+    end
 
     def sortable(column, title = nil, html_options = {}, &block)
       if title.is_a?(Hash) # If title is a hash, it wasn't passed
@@ -48,11 +51,19 @@ module Binxtils
       params[:period].present? && params[:period] != "all"
     end
 
+    def sortable_params
+      @sortable_params ||= sortable_search_params.as_json.filter_map do |k, v|
+        next if v.blank? || k == "sort" && v == default_column ||
+          k == "sort_direction" && v == default_direction
+        [k, v]
+      end.to_h.with_indifferent_access
+    end
+
     def sortable_search_params
       return @sortable_search_params if defined?(@sortable_search_params)
 
       search_param_keys = params.keys.select { |k| k.to_s.start_with?("search_") } # match params starting with search_
-      @sortable_search_params = params.permit(*(DEFAULT_SEARCH_KEYS | search_param_keys))
+      @sortable_search_params = params.permit(*(default_search_keys | search_param_keys))
     end
 
     private

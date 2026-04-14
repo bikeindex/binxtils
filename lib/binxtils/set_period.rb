@@ -4,23 +4,22 @@ module Binxtils
   module SetPeriod
     extend ActiveSupport::Concern
 
-    DEFAULT_EARLIEST_TIME = Time.at(1134972000) # Earliest bike created at
     PERIOD_TYPES = %w[hour day month year week all next_week next_month].freeze
+
+    included do
+      class_attribute :default_earliest_time, default: Time.at(0).freeze
+    end
 
     # For setting periods, particularly for graphing
     def set_period
-      @timezone ||= Time.zone
+      set_timezone
       # Set time period
       @period ||= params[:period]
       if @period == "custom"
         if params[:start_time].present?
           @start_time = Binxtils::TimeParser.parse(params[:start_time], @timezone)
           @end_time = Binxtils::TimeParser.parse(params[:end_time], @timezone) || latest_period_date
-          if @start_time > @end_time
-            new_end_time = @start_time
-            @start_time = @end_time
-            @end_time = new_end_time
-          end
+          @start_time, @end_time = @end_time, @start_time if @start_time > @end_time
         else
           set_time_range_from_period
         end
@@ -62,9 +61,8 @@ module Binxtils
         @end_time = Time.current.beginning_of_day + 1.week
       when "all"
         @start_time = earliest_period_date
-        @end_time = latest_period_date
       end
-      @end_time ||= Time.current
+      @end_time ||= latest_period_date
     end
 
     # Separate method so it can be overridden on per controller basis
@@ -79,7 +77,7 @@ module Binxtils
 
     # Separate method so it can be overridden on per controller basis
     def earliest_period_date
-      DEFAULT_EARLIEST_TIME
+      default_earliest_time
     end
 
     def set_timezone
