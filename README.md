@@ -12,12 +12,59 @@ gem "binxtils"
 - **Binxtils::TimeParser** - Parse fuzzy time/date strings into `Time` objects
 - **Binxtils::TimeZoneParser** - Parse and resolve time zone strings
 
-## Usage
+### Functionable modules
 
-All modules use [Functionable](https://github.com/sethherr/functionable) and are called as class methods:
+These modules use [Functionable](https://github.com/sethherr/functionable) and are called as class methods:
 
 ```ruby
 Binxtils::TimeParser.parse("next thursday")
 Binxtils::InputNormalizer.string("  Some Input  ")
 Binxtils::TimeZoneParser.parse("Eastern Time")
 ```
+
+### Rails concerns
+
+- **Binxtils::SetPeriod** - Controller concern for time period filtering (hour, day, week, month, year, all, custom). Parses period params, manages timezones, and sets `@time_range`.
+- **Binxtils::SortableTable** - Controller concern providing `sort_column` and `sort_direction` helpers with configurable defaults.
+- **Binxtils::SortableHelper** - View helper for rendering sortable column header links with active-state indicators.
+
+Include them in your controllers and helpers:
+
+```ruby
+class ApplicationController < ActionController::Base
+  include Binxtils::SetPeriod
+  include Binxtils::SortableTable
+
+  # Optionally configure the earliest date for the "all" period
+  self.default_earliest_time = Time.at(1714460400).freeze
+end
+
+module ApplicationHelper
+  include Binxtils::SortableHelper
+
+  # Optionally extend the permitted search params
+  def default_search_keys
+    super + [:organization_id, query_items: []]
+  end
+end
+```
+
+`SortableTable` requires a `sortable_columns` method in your controller:
+
+```ruby
+class BikesController < ApplicationController
+  def sortable_columns
+    %w[created_at updated_at manufacturer_id]
+  end
+end
+```
+
+## Releasing
+
+From the `main` branch, run `bin/release` with a version number:
+
+```
+bin/release 0.3.0
+```
+
+This bumps the version, commits, tags, pushes, builds and publishes the gem to RubyGems, and creates a GitHub release.

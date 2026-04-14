@@ -10,5 +10,6 @@ group :development do
 end
 
 group :test do
+  gem "actionpack"
   gem "rspec"
 end
