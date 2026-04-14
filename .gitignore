@@ -10,6 +10,7 @@ tmp
 .ruby-version
 
 node_modules/
+dist/
 
 # Ignore .claude settings
 .claude/
