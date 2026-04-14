@@ -7,7 +7,7 @@ module Binxtils
     included do
       before_action :set_period, only: %i[index]
 
-      helper_method :sort_column, :sort_direction
+      helper_method :sort_column, :sort_direction, :default_column, :default_direction
     end
 
     def sort_column

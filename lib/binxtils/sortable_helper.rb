@@ -54,7 +54,7 @@ module Binxtils
     def sortable_params
       @sortable_params ||= sortable_search_params.as_json.filter_map do |k, v|
         next if v.blank? || k == "sort" && v == default_column ||
-          k == "sort_direction" && v == default_direction
+          k == "direction" && v == default_direction
         [k, v]
       end.to_h.with_indifferent_access
     end

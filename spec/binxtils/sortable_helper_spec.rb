@@ -138,5 +138,15 @@ RSpec.describe Binxtils::SortableHelper do
         expect(result["query"]).to eq "bike"
       end
     end
+
+    context "with default direction" do
+      let(:params) { {direction: "desc", query: "bike"} }
+
+      it "strips default direction" do
+        result = helper.sortable_params
+        expect(result.key?("direction")).to eq false
+        expect(result["query"]).to eq "bike"
+      end
+    end
   end
 end
