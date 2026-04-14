@@ -59,6 +59,12 @@ class BikesController < ApplicationController
 end
 ```
 
+## npm package
+
+This repo also publishes `@bikeindex/time-localizer`, an npm package for localizing time elements in the browser. Luxon is bundled into the published package, so consumers don't need to install it separately.
+
+To publish a new version: update the version in `package.json`, then run `npm publish` from the repo root (requires npm login with access to the `@bikeindex` scope). The `prepublishOnly` script automatically builds `dist/index.js` before publishing.
+
 ## Releasing
 
 From the `main` branch, run `bin/release` with a version number:
