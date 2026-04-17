@@ -41,12 +41,10 @@ end
 
 module ApplicationHelper
   include Binxtils::SortableHelper
-
-  # Optionally extend the permitted search params
-  def default_search_keys
-    super + [:organization_id, query_items: []]
-  end
 end
+
+# Optionally extend the permitted search params (e.g. in an initializer)
+Binxtils::SortableHelper.extra_search_keys = [:organization_id, query_items: []]
 ```
 
 `SortableTable` requires a `sortable_columns` method in your controller:

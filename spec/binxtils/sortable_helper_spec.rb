@@ -175,8 +175,35 @@ RSpec.describe Binxtils::SortableHelper do
   end
 
   describe "default_search_keys" do
-    it "returns BASE_SEARCH_KEYS" do
-      expect(helper.default_search_keys).to eq Binxtils::SortableHelper::BASE_SEARCH_KEYS
+    context "without extra_search_keys" do
+      it "returns BASE_SEARCH_KEYS" do
+        expect(helper.default_search_keys).to eq Binxtils::SortableHelper::BASE_SEARCH_KEYS
+      end
+    end
+
+    context "with extra_search_keys set" do
+      around do |example|
+        original = Binxtils::SortableHelper.extra_search_keys
+        Binxtils::SortableHelper.extra_search_keys = [:organization_id, {query_items: []}]
+        example.run
+        Binxtils::SortableHelper.extra_search_keys = original
+      end
+
+      it "appends extra keys to BASE_SEARCH_KEYS" do
+        expect(helper.default_search_keys).to eq(
+          Binxtils::SortableHelper::BASE_SEARCH_KEYS + [:organization_id, {query_items: []}]
+        )
+      end
+
+      context "with matching search params" do
+        let(:passed_params) { {organization_id: 7, query_items: ["a", "b"], other: "nope"} }
+
+        it "permits the extra keys in sortable_search_params" do
+          expect(helper.sortable_search_params.to_unsafe_h).to eq(
+            {"organization_id" => 7, "query_items" => ["a", "b"]}
+          )
+        end
+      end
     end
   end
 end

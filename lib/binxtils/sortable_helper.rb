@@ -2,18 +2,22 @@
 
 module Binxtils
   module SortableHelper
+    extend ActiveSupport::Concern
+
     BASE_SEARCH_KEYS = [
       :direction, :sort, # sorting params
       :period, :start_time, :end_time, :render_chart, # Time period params
       :user_id, :query, :per_page # General search params
     ].freeze
 
+    mattr_accessor :extra_search_keys, default: []
+
     # Set defaults, required for testing
     def sort_column = "id"
     def sort_direction = "desc"
 
     def default_search_keys
-      BASE_SEARCH_KEYS
+      BASE_SEARCH_KEYS + Binxtils::SortableHelper.extra_search_keys
     end
 
     def sortable(column, title = nil, html_options = {}, &block)
