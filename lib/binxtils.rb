@@ -13,6 +13,6 @@ require_relative "binxtils/time_parser"
 require_relative "binxtils/set_period"
 require_relative "binxtils/sortable_table"
 require_relative "binxtils/sortable_helper"
-require_relative "binxtils/controller_namespace"
+require "binxtils/controller_namespace"
 require_relative "binxtils/nav_helper"
 require_relative "binxtils/railtie" if defined?(Rails::Railtie)
