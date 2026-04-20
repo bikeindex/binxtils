@@ -25,8 +25,7 @@ Gem::Specification.new do |spec|
   spec.extra_rdoc_files = Dir["README*", "LICENSE*"]
 
   spec.add_dependency "functionable"
-  spec.add_dependency "activesupport"
-  spec.add_dependency "activerecord"
+  spec.add_dependency "rails"
   spec.add_dependency "loofah"
   spec.add_dependency "rails-html-sanitizer"
 end

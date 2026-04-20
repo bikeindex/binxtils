@@ -15,4 +15,4 @@ require_relative "binxtils/sortable_table"
 require_relative "binxtils/sortable_helper"
 require "binxtils/controller_namespace"
 require_relative "binxtils/nav_helper"
-require_relative "binxtils/railtie" if defined?(Rails::Railtie)
+require_relative "binxtils/engine" if defined?(Rails::Engine)
