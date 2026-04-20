@@ -14,3 +14,7 @@ dist/
 
 # Ignore .claude settings
 .claude/
+
+# Dummy app generated files
+spec/dummy/log/
+spec/dummy/tmp/
