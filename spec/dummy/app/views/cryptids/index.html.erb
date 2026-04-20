@@ -1,0 +1,22 @@
+<h1>Cryptids</h1>
+
+<table id="cryptids-table">
+  <thead>
+    <tr>
+      <th><%= sortable("name") %></th>
+      <th><%= sortable("region") %></th>
+      <th><%= sortable("sightings") %></th>
+      <th><%= sortable("first_seen", "First seen") %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @cryptids.each do |cryptid| %>
+      <tr data-cryptid-name="<%= cryptid.name %>">
+        <td class="cryptid-name"><%= cryptid.name %></td>
+        <td><%= cryptid.region %></td>
+        <td class="cryptid-sightings"><%= cryptid.sightings %></td>
+        <td><%= cryptid.first_seen&.to_date %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

@@ -9,6 +9,18 @@ jobs:
     strategy:
       matrix:
         ruby: ["3.4", "4.0"]
+    services:
+      postgres:
+        image: postgres:17-alpine
+        ports:
+          - "5432:5432"
+        env:
+          POSTGRES_USER: rails
+          POSTGRES_PASSWORD: password
+    env:
+      PGHOST: localhost
+      PGUSER: rails
+      PGPASSWORD: password
     steps:
       - uses: actions/checkout@v6
       - uses: ruby/setup-ruby@v1

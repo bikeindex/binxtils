@@ -10,7 +10,8 @@ group :development do
 end
 
 group :test do
-  gem "actionpack"
-  gem "actionview"
   gem "rspec"
+  gem "rspec-rails"
+  gem "capybara"
+  gem "pg"
 end
