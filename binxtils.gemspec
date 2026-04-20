@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = ">= 3.4"
 
   spec.files = Dir["lib/**/*", "app/**/*"]
-  spec.require_paths = ["lib", "app/controllers/concerns"]
+  spec.require_paths = ["lib", "app/controllers/concerns", "app/helpers"]
   spec.extra_rdoc_files = Dir["README*", "LICENSE*"]
 
   spec.add_dependency "functionable"

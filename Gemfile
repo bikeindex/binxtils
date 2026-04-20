@@ -11,4 +11,7 @@ end
 
 group :test do
   gem "rspec"
+  gem "rspec-rails"
+  gem "capybara"
+  gem "pg"
 end

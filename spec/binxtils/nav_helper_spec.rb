@@ -18,15 +18,6 @@ TEST_ROUTES = ActionDispatch::Routing::RouteSet.new.tap do |routes|
   end
 end
 
-# Extend the stubbed Rails.application from spec_helper with routes
-module Rails
-  class Application
-    def routes
-      TEST_ROUTES
-    end
-  end
-end
-
 class NavHelperTestContext
   include Binxtils::NavHelper
 
@@ -44,6 +35,12 @@ end
 
 RSpec.describe Binxtils::NavHelper do
   let(:helper) { NavHelperTestContext.new(current_url: "http://example.com/admin/users/new") }
+
+  before do
+    fake_app = Object.new
+    fake_app.define_singleton_method(:routes) { TEST_ROUTES }
+    allow(Rails).to receive(:application).and_return(fake_app)
+  end
 
   describe "current_page_active?" do
     context "match_controller false" do
