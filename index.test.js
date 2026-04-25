@@ -18,6 +18,13 @@ function buildLocalizer () {
   return new TimeLocalizer()
 }
 
+function clearCookies () {
+  document.cookie.split(';').forEach((c) => {
+    const name = c.split('=')[0].trim()
+    if (name) document.cookie = `${name}=; path=/; max-age=0`
+  })
+}
+
 describe('TimeLocalizer', () => {
   let localizer
 
@@ -25,6 +32,7 @@ describe('TimeLocalizer', () => {
     window.localTimezone = undefined
     window.timeLocalizerSingleFormat = undefined
     Settings.now = () => NOW.toMillis()
+    clearCookies()
     localizer = buildLocalizer()
   })
 
@@ -53,6 +61,29 @@ describe('TimeLocalizer', () => {
 
     it('stores yesterdayStart as a DateTime', () => {
       expect(localizer.yesterdayStart).toBeInstanceOf(DateTime)
+    })
+  })
+
+  describe('writeTimezoneCookie', () => {
+    it('writes the timezone cookie on construction', () => {
+      expect(document.cookie).toContain(`timezone=${ZONE}`)
+    })
+
+    it('uses window.localTimezone when set', () => {
+      clearCookies()
+      window.localTimezone = 'Europe/London'
+      // eslint-disable-next-line no-new
+      new TimeLocalizer()
+      expect(document.cookie).toContain('timezone=Europe/London')
+    })
+
+    it('overwrites a stale timezone cookie', () => {
+      document.cookie = 'timezone=America/New_York; path=/'
+      window.localTimezone = 'Europe/Paris'
+      // eslint-disable-next-line no-new
+      new TimeLocalizer()
+      expect(document.cookie).toContain('timezone=Europe/Paris')
+      expect(document.cookie).not.toContain('America/New_York')
     })
   })
 
