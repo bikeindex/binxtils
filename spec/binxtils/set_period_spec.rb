@@ -6,20 +6,22 @@ require "spec_helper"
 class SetPeriodTestController
   include Binxtils::SetPeriod
 
-  attr_accessor :params, :session
+  attr_accessor :params, :session, :cookies
 
   # Expose ivars for assertions
   attr_reader :period, :start_time, :end_time, :time_range, :render_chart, :timezone, :search_at
-  def initialize(params: {}, session: {})
+  def initialize(params: {}, session: {}, cookies: {})
     @params = params.with_indifferent_access
     @session = session.with_indifferent_access
+    @cookies = cookies.with_indifferent_access
   end
 end
 
 RSpec.describe Binxtils::SetPeriod do
   let(:params) { {} }
   let(:session) { {} }
-  let(:controller) { SetPeriodTestController.new(params:, session:) }
+  let(:cookies) { {} }
+  let(:controller) { SetPeriodTestController.new(params:, session:, cookies:) }
 
   before { controller.set_period }
 
@@ -187,6 +189,32 @@ RSpec.describe Binxtils::SetPeriod do
 
       it "restores timezone from session" do
         expect(controller.timezone.name).to eq "America/New_York"
+      end
+    end
+
+    context "with cookie timezone" do
+      let(:cookies) { {timezone: "America/Denver"} }
+
+      it "reads timezone from cookies" do
+        expect(controller.timezone.name).to eq "America/Denver"
+      end
+    end
+
+    context "with both session and cookie timezones" do
+      let(:session) { {timezone: "America/New_York"} }
+      let(:cookies) { {timezone: "America/Denver"} }
+
+      it "prefers session over cookie" do
+        expect(controller.timezone.name).to eq "America/New_York"
+      end
+    end
+
+    context "with timezone param and existing cookie" do
+      let(:params) { {timezone: "America/Los_Angeles"} }
+      let(:cookies) { {timezone: "America/Denver"} }
+
+      it "prefers param over cookie" do
+        expect(controller.timezone.name).to eq "America/Los_Angeles"
       end
     end
 

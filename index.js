@@ -26,6 +26,7 @@ export default class TimeLocalizer {
     }
     this.singleFormat = !!window.timeLocalizerSingleFormat
     this.localTimezone = window.localTimezone
+    this.writeTimezoneCookie()
     this.now = DateTime.now().setZone(this.localTimezone)
     // Create all DateTime instances with the local timezone
     this.yesterdayStart = this.now.minus({ days: 1 }).startOf('day').minus({ milliseconds: 1 })
@@ -220,5 +221,9 @@ export default class TimeLocalizer {
   writeTimezone (el) {
     el.textContent = this.now.toFormat('ZZZZ')
     el.classList.remove('localizeTimezone')
+  }
+
+  writeTimezoneCookie () {
+    document.cookie = `timezone=${this.localTimezone}; path=/; max-age=31536000; SameSite=Lax`
   }
 }
