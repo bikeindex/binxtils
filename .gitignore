@@ -12,8 +12,10 @@ tmp
 node_modules/
 dist/
 
-# Ignore .claude settings
-.claude/
+# Ignore personal .claude settings, but ship the SessionStart hook
+.claude/*
+!.claude/hooks/
+!.claude/settings.json
 
 # Dummy app generated files
 spec/dummy/log/

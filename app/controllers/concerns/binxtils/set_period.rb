@@ -91,7 +91,6 @@ module Binxtils
       @timezone ||= Binxtils::TimeZoneParser.parse(session[:timezone]) if session[:timezone].present?
       @timezone ||= Binxtils::TimeZoneParser.parse(cookies[:timezone]) if cookies[:timezone].present?
       Time.zone = @timezone if @timezone
-
       @timezone ||= Binxtils::TimeParser.default_time_zone
     end
   end
