@@ -65,6 +65,10 @@ RSpec.describe Binxtils::InputNormalizer do
       expect(subject.string(" D  ")).to eq "D"
       expect(subject.string(" D HI \Z \nf ")).to eq "D HI \Z f"
     end
+    it "removes null bytes" do
+      expect(subject.string("D\u0000HI")).to eq "DHI"
+      expect(subject.string(" D \u0000 HI ")).to eq "D HI"
+    end
   end
 
   describe "regex_escape" do
