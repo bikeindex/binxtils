@@ -13,7 +13,7 @@ module Binxtils
     def string(val)
       return nil if val.blank?
 
-      val.strip.gsub(/\s+/, " ")
+      val.delete("\u0000").strip.gsub(/\s+/, " ")
     end
 
     def present_or_false?(val)
