@@ -18,6 +18,23 @@ module Binxtils
       nil
     end
 
+    def looks_like_timestamp?(time_str)
+      time_str.is_a?(Integer) || time_str.is_a?(Float) || time_str.to_s.strip.match(/^\d+\z/) # it's only numbers
+    end
+
+    # Accepts a time object, rounds to minutes
+    def round(time, unit = "minute")
+      if unit == "second"
+        time.change(usec: 0, sec: 0)
+      else # Default is minute, nothing is built to manage anything else
+        time.change(min: 0, usec: 0, sec: 0)
+      end
+    end
+
+    #
+    # private below here
+    #
+
     def parse!(time_str = nil, time_zone_str = nil, in_time_zone: false)
       return nil unless time_str.present?
       return time_str if time_str.is_a?(Time)
@@ -37,8 +54,8 @@ module Binxtils
       # Try to parse some other, unexpected formats -
       paychex_formatted = %r{(?<month>\d+)/(?<day>\d+)/(?<year>\d+) (?<hour>\d\d):(?<minute>\d\d) (?<ampm>\w\w)}.match(time_str)
       ie11_formatted = %r{(?<month>\d+)/(?<day>\d+)/(?<year>\d+)}.match(time_str)
-      just_date = %r{(?<year>\d{4})[^\d\w](?<month>\d\d?)}.match(time_str)
-      just_date_backward = %r{(?<month>\d\d?)[^\d\w](?<year>\d{4})}.match(time_str)
+      just_date = %r{(?<year>\d{4})\D(?<month>\d\d?)}.match(time_str)
+      just_date_backward = %r{(?<month>\d\d?)\D(?<year>\d{4})}.match(time_str)
 
       # Get the successful matching regex group, and then reformat it in an expected way
       regex_match = [paychex_formatted, ie11_formatted, just_date, just_date_backward].compact.first
@@ -63,23 +80,6 @@ module Binxtils
       # Run it through Binxtils::TimeParser again
       parse!(new_str, time_zone_str, in_time_zone:)
     end
-
-    def looks_like_timestamp?(time_str)
-      time_str.is_a?(Integer) || time_str.is_a?(Float) || time_str.to_s.strip.match(/^\d+\z/) # it's only numbers
-    end
-
-    # Accepts a time object, rounds to minutes
-    def round(time, unit = "minute")
-      if unit == "second"
-        time.change(usec: 0, sec: 0)
-      else # Default is minute, nothing is built to manage anything else
-        time.change(min: 0, usec: 0, sec: 0)
-      end
-    end
-
-    #
-    # private below here
-    #
 
     def time_in_zone(time, time_zone_str:, time_str: nil, time_zone: nil)
       time_zone ||= if time_zone_str.present?

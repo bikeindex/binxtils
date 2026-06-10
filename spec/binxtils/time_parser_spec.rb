@@ -198,6 +198,12 @@ RSpec.describe Binxtils::TimeParser, type: :service do
         expect(subject.parse("3/2017").to_date).to eq target_date
         expect(subject.parse("03/2017").to_date).to eq target_date
       end
+
+      it "parses with any non-digit separator" do
+        expect(subject.parse("2017T3").to_date).to eq target_date
+        expect(subject.parse("2017x3").to_date).to eq target_date
+        expect(subject.parse("3_2017").to_date).to eq target_date
+      end
     end
 
     context "2019" do
