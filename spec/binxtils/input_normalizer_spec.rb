@@ -69,6 +69,12 @@ RSpec.describe Binxtils::InputNormalizer do
       expect(subject.string("D\u0000HI")).to eq "DHI"
       expect(subject.string(" D \u0000 HI ")).to eq "D HI"
     end
+    it "casts non-string values" do
+      expect(subject.string(123)).to eq "123"
+      expect(subject.string(12.5)).to eq "12.5"
+      expect(subject.string(:symbol)).to eq "symbol"
+      expect(subject.string(false)).to be_nil # false is blank
+    end
   end
 
   describe "regex_escape" do

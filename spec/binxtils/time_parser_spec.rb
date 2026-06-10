@@ -137,12 +137,29 @@ RSpec.describe Binxtils::TimeParser, type: :service do
       end
     end
 
+    context "with Time.zone set to a non-default zone" do
+      before { Time.zone = ActiveSupport::TimeZone["America/Denver"] }
+      after { Time.zone = default_time_zone }
+
+      it "does not clobber Time.zone" do
+        subject.parse("2016-02-08 04:00:00", "America/Chicago")
+        expect(Time.zone.name).to eq "America/Denver"
+      end
+
+      context "without a time_zone argument" do
+        it "parses in the current zone" do
+          expect(subject.parse("2016-02-08 04:00:00").to_i).to eq 1454929200
+          expect(Time.zone.name).to eq "America/Denver"
+        end
+      end
+    end
+
     context "with cray IE 11 time params" do
       let(:target_time) { 1538283600 }
       let(:target_time_in_uk) { 1538262000 }
       let(:time_str) { "09/30/2018" }
 
-      it "parses it, resets the zone over and over again" do
+      it "parses it, without changing the zone" do
         expect(Time.zone).to eq default_time_zone
         expect(subject.parse(time_str, "").to_i).to eq target_time
         expect(Time.zone).to eq default_time_zone
@@ -181,6 +198,12 @@ RSpec.describe Binxtils::TimeParser, type: :service do
         expect(subject.parse("3/2017").to_date).to eq target_date
         expect(subject.parse("03/2017").to_date).to eq target_date
       end
+
+      it "parses with any non-digit separator" do
+        expect(subject.parse("2017T3").to_date).to eq target_date
+        expect(subject.parse("2017x3").to_date).to eq target_date
+        expect(subject.parse("3_2017").to_date).to eq target_date
+      end
     end
 
     context "2019" do
@@ -193,10 +216,19 @@ RSpec.describe Binxtils::TimeParser, type: :service do
     end
 
     context "not a date" do
+      let(:not_date_str) { "3fbd3770-1b71-4f21-8647-a1804e404aca" }
+
       it "errors" do
-        expect {
-          subject.parse("3fbd3770-1b71-4f21-8647-a1804e404aca")
-        }.to raise_error(ArgumentError)
+        expect { subject.parse(not_date_str) }.to raise_error(ArgumentError)
+      end
+
+      context "with parse_error: :nil" do
+        it "returns nil" do
+          expect(subject.parse(not_date_str, parse_error: :nil)).to be_nil
+          expect(subject.parse("25:00:00", parse_error: :nil)).to be_nil
+          # parseable strings still parse
+          expect(subject.parse("2024-01-01", parse_error: :nil).to_date).to eq Date.parse("2024-01-01")
+        end
       end
     end
 
@@ -206,6 +238,12 @@ RSpec.describe Binxtils::TimeParser, type: :service do
         # invalid month, appends -01, and re-parses the same string in a loop
         expect { subject.parse("2020-13") }.to raise_error(ArgumentError)
         expect { subject.parse("2020-13-45") }.to raise_error(ArgumentError)
+      end
+
+      context "with parse_error: :nil" do
+        it "returns nil" do
+          expect(subject.parse("2020-13", parse_error: :nil)).to be_nil
+        end
       end
     end
 

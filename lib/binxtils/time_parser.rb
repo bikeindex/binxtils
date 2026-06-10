@@ -5,58 +5,17 @@ module Binxtils
     extend Functionable
 
     EARLIEST_YEAR = 1900
-    LATEST_YEAR = Time.current.year + 100
 
     def default_time_zone
       @default_time_zone ||= ActiveSupport::TimeZone[Rails.application.class.config.time_zone].freeze
     end
 
-    def parse(time_str = nil, time_zone_str = nil, in_time_zone: false)
-      return nil unless time_str.present?
-      return time_str if time_str.is_a?(Time)
-
-      if looks_like_timestamp?(time_str)
-        return parse("#{time_str}-01-01") if time_str.to_s.length == 4 # Looks like year, valid 8601 format
-
-        # otherwise it's a timestamp
-        time = Time.at(time_str.to_i)
-      else
-        time_zone = Binxtils::TimeZoneParser.parse(time_zone_str)
-        Time.zone = time_zone
-        time = Time.zone.parse(time_str.to_s) # Assign in time zone
-        Time.zone = default_time_zone
-      end
-      # Return in time_zone or not
-      in_time_zone ? time_in_zone(time, time_str:, time_zone:, time_zone_str:) : time
-    rescue ArgumentError => e
-      # Try to parse some other, unexpected formats -
-      paychex_formatted = %r{(?<month>\d+)/(?<day>\d+)/(?<year>\d+) (?<hour>\d\d):(?<minute>\d\d) (?<ampm>\w\w)}.match(time_str)
-      ie11_formatted = %r{(?<month>\d+)/(?<day>\d+)/(?<year>\d+)}.match(time_str)
-      just_date = %r{(?<year>\d{4})[^\d|\w](?<month>\d\d?)}.match(time_str)
-      just_date_backward = %r{(?<month>\d\d?)[^\d|\w](?<year>\d{4})}.match(time_str)
-
-      # Get the successful matching regex group, and then reformat it in an expected way
-      regex_match = [paychex_formatted, ie11_formatted, just_date, just_date_backward].compact.first
-      raise e unless regex_match.present?
-
-      new_str = %w[year month day]
-        .map { |component| regex_match[component] if regex_match.names.include?(component) }
-        .compact
-        .join("-")
-
-      # If we end up with an unreasonable year or month, throw an error
-      # (an invalid month would otherwise recurse forever, re-matching and re-appending the day)
-      raise e unless new_str.split("-").first.to_i.between?(EARLIEST_YEAR, LATEST_YEAR)
-      raise e unless regex_match["month"].to_i.between?(1, 12)
-
-      # Add the day, if there isn't one
-      new_str += "-01" unless regex_match.names.include?("day")
-      # If it's paychex_formatted there is an hour and minute
-      if paychex_formatted.present?
-        new_str += " #{regex_match["hour"]}:#{regex_match["minute"]}#{regex_match["ampm"]}"
-      end
-      # Run it through Binxtils::TimeParser again
-      parse(new_str, time_zone_str, in_time_zone:)
+    # parse_error: :raise raises unparseable input errors, :nil swallows them
+    def parse(time_str = nil, time_zone_str = nil, in_time_zone: false, parse_error: :raise)
+      parse!(time_str, time_zone_str, in_time_zone:)
+    rescue ArgumentError
+      raise unless parse_error == :nil
+      nil
     end
 
     def looks_like_timestamp?(time_str)
@@ -76,6 +35,52 @@ module Binxtils
     # private below here
     #
 
+    def parse!(time_str = nil, time_zone_str = nil, in_time_zone: false)
+      return nil unless time_str.present?
+      return time_str if time_str.is_a?(Time)
+
+      if looks_like_timestamp?(time_str)
+        return parse!("#{time_str}-01-01") if time_str.to_s.length == 4 # Looks like year, valid 8601 format
+
+        # otherwise it's a timestamp
+        time = Time.at(time_str.to_i)
+      else
+        time_zone = Binxtils::TimeZoneParser.parse(time_zone_str)
+        time = (time_zone || Time.zone).parse(time_str.to_s) # Assign in time zone
+      end
+      # Return in time_zone or not
+      in_time_zone ? time_in_zone(time, time_str:, time_zone:, time_zone_str:) : time
+    rescue ArgumentError => e
+      # Try to parse some other, unexpected formats -
+      paychex_formatted = %r{(?<month>\d+)/(?<day>\d+)/(?<year>\d+) (?<hour>\d\d):(?<minute>\d\d) (?<ampm>\w\w)}.match(time_str)
+      ie11_formatted = %r{(?<month>\d+)/(?<day>\d+)/(?<year>\d+)}.match(time_str)
+      just_date = %r{(?<year>\d{4})\D(?<month>\d\d?)}.match(time_str)
+      just_date_backward = %r{(?<month>\d\d?)\D(?<year>\d{4})}.match(time_str)
+
+      # Get the successful matching regex group, and then reformat it in an expected way
+      regex_match = [paychex_formatted, ie11_formatted, just_date, just_date_backward].compact.first
+      raise e unless regex_match.present?
+
+      new_str = %w[year month day]
+        .map { |component| regex_match[component] if regex_match.names.include?(component) }
+        .compact
+        .join("-")
+
+      # If we end up with an unreasonable year or month, throw an error
+      # (an invalid month would otherwise recurse forever, re-matching and re-appending the day)
+      raise e unless new_str.split("-").first.to_i.between?(EARLIEST_YEAR, Time.current.year + 100)
+      raise e unless regex_match["month"].to_i.between?(1, 12)
+
+      # Add the day, if there isn't one
+      new_str += "-01" unless regex_match.names.include?("day")
+      # If it's paychex_formatted there is an hour and minute
+      if paychex_formatted.present?
+        new_str += " #{regex_match["hour"]}:#{regex_match["minute"]}#{regex_match["ampm"]}"
+      end
+      # Run it through Binxtils::TimeParser again
+      parse!(new_str, time_zone_str, in_time_zone:)
+    end
+
     def time_in_zone(time, time_zone_str:, time_str: nil, time_zone: nil)
       time_zone ||= if time_zone_str.present?
         Binxtils::TimeZoneParser.parse(time_zone_str)
@@ -87,6 +92,6 @@ module Binxtils
       time.in_time_zone(time_zone || ActiveSupport::TimeZone["UTC"])
     end
 
-    conceal :time_in_zone
+    conceal :time_in_zone, :parse!
   end
 end
