@@ -27,6 +27,7 @@ This project uses Rspec for Ruby tests (`bin/rspec`) and Vitest for JavaScript t
 
 - Tests should either: help make the code correct now or prevent bugs in the future. Don't add tests that don't do one of those things.
 - Avoid mocking objects
+- Never make a failing test pass by swapping its target for a fixture or a mock — keep tests exercising real code, and make the brittle expectation robust instead (e.g. derive the expected value from whatever varies)
 - Ruby: Use `context` and `let` to isolate what varies between examples.
   - Each `it` block should live in a `context` that names the condition, with `let` overrides for only what differs in that case. Avoid repeating setup across sibling `it` blocks.
 - JavaScript: Tests are in `index.test.js`. The vitest config pins `TZ=America/Chicago` for deterministic output.
