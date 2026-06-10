@@ -44,8 +44,10 @@ module Binxtils
         .compact
         .join("-")
 
-      # If we end up with an unreasonable year, throw an error
+      # If we end up with an unreasonable year or month, throw an error
+      # (an invalid month would otherwise recurse forever, re-matching and re-appending the day)
       raise e unless new_str.split("-").first.to_i.between?(EARLIEST_YEAR, LATEST_YEAR)
+      raise e unless regex_match["month"].to_i.between?(1, 12)
 
       # Add the day, if there isn't one
       new_str += "-01" unless regex_match.names.include?("day")
