@@ -93,6 +93,11 @@ describe('TimeLocalizer', () => {
       expect(result.toISO()).toBe('2020-11-02T11:12:11.000-06:00')
     })
 
+    it('parses 13-digit millisecond timestamps (e.g. Date.now())', () => {
+      const result = localizer.parse('1604337131000')
+      expect(result.toISO()).toBe('2020-11-02T11:12:11.000-06:00')
+    })
+
     it('parses ISO 8601 strings', () => {
       const result = localizer.parse('2025-06-15T10:30:00Z')
       // Luxon converts to system timezone (CDT = UTC-5 in summer)
@@ -372,6 +377,21 @@ describe('TimeLocalizer', () => {
       expect(el.classList.contains('localizedTime')).toBe(true)
       expect(el.innerHTML).toBe('Nov 2, 2020')
       expect(el.getAttribute('title')).toBe('November 2, 2020 at 11:12:11am CST')
+    })
+
+    it('refreshes now on each localize call so a long-lived page does not go stale', () => {
+      // A timestamp that is "today" when the localizer was constructed
+      const el = document.createElement('span')
+      el.className = 'localizeTime'
+      el.textContent = Math.floor(NOW.toSeconds()).toString()
+      document.body.appendChild(el)
+
+      // Advance "now" three days, as on a page left open across days
+      Settings.now = () => NOW.plus({ days: 3 }).toMillis()
+      localizer.localize()
+
+      // No longer today, so it renders a date rather than just the time
+      expect(el.innerHTML).toBe('Mar 23')
     })
 
     it('skips title when element has skipTimeTitle class', () => {

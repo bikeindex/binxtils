@@ -11,9 +11,12 @@
     "dist/index.js"
   ],
   "scripts": {
-    "build": "esbuild index.js --bundle --format=esm --minify --outfile=dist/index.js",
+    "build": "esbuild index.js --bundle --format=esm --minify --external:luxon --outfile=dist/index.js",
     "prepublishOnly": "npm run build",
     "test": "vitest run"
+  },
+  "peerDependencies": {
+    "luxon": "^3.0.0"
   },
   "devDependencies": {
     "esbuild": "^0.28.0",

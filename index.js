@@ -27,6 +27,15 @@ export default class TimeLocalizer {
     this.singleFormat = !!window.timeLocalizerSingleFormat
     this.localTimezone = window.localTimezone
     this.writeTimezoneCookie()
+    this.refreshNow()
+    // may configure differently for different pages someday. Currently, this is what gmail does
+    this.onlyTodayWithoutDate = true
+  }
+
+  // Recompute "now" and the day boundaries derived from it.
+  // Called on construction and again on each localize() so a long-lived page
+  // doesn't keep using a stale "now" for today/yesterday and the 4-hour window
+  refreshNow () {
     this.now = DateTime.now().setZone(this.localTimezone)
     // Create all DateTime instances with the local timezone
     this.yesterdayStart = this.now.minus({ days: 1 }).startOf('day').minus({ milliseconds: 1 })
@@ -34,8 +43,6 @@ export default class TimeLocalizer {
     this.todayEnd = this.now.endOf('day')
     this.tomorrowEnd = this.now.plus({ days: 1 }).endOf('day')
     this.todayYear = this.now.year
-    // may configure differently for different pages someday. Currently, this is what gmail does
-    this.onlyTodayWithoutDate = true
   }
 
   // Directly render localized time elements. Returns an HTML string
@@ -65,6 +72,8 @@ export default class TimeLocalizer {
   // Update all the times (and timezones) on the page
   // Removes the classes that trigger localization, so it doesn't reupdate the times
   localize () {
+    // Recompute now so re-running on new content doesn't use a stale "now"
+    this.refreshNow()
     // Write times
     Array.from(document.getElementsByClassName('localizeTime')).forEach((el) =>
       this.writeTime(el)
@@ -127,7 +136,7 @@ export default class TimeLocalizer {
         'ss'
       )}</small>${ampm}`
     } else {
-      return prefix + time.toFormat(`${baseTimeFormat}`) + ampm
+      return prefix + time.toFormat(baseTimeFormat) + ampm
     }
   }
 
@@ -213,7 +222,10 @@ export default class TimeLocalizer {
     // If time is only a number, parse as a timestamp
     // Otherwise, parse as ISO_8601 which is the default time string
     if (/^\d+$/.test(text)) {
-      return DateTime.fromSeconds(parseInt(text))
+      // A 13-digit epoch (e.g. Date.now()) is milliseconds; 10-digit is seconds
+      return text.length > 11
+        ? DateTime.fromMillis(parseInt(text))
+        : DateTime.fromSeconds(parseInt(text))
     }
     return DateTime.fromISO(text)
   }
@@ -224,6 +236,6 @@ export default class TimeLocalizer {
   }
 
   writeTimezoneCookie () {
-    document.cookie = `timezone=${this.localTimezone}; path=/; max-age=31536000; SameSite=Lax`
+    document.cookie = `timezone=${this.localTimezone}; path=/; max-age=31536000; SameSite=Lax; Secure`
   }
 }
