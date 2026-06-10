@@ -39,8 +39,9 @@ module Binxtils
         span_content = (direction == "asc") ? "\u2193" : "\u2191"
       end
 
+      # Titles are escaped (not marked html_safe) - pass a block to render HTML
       link_to(sortable_url(column, direction), html_options) do
-        concat(block_given? ? capture(&block) : title.html_safe)
+        concat(block_given? ? capture(&block) : title)
         concat(content_tag(:span, span_content, class: "sortable-direction"))
       end
     end

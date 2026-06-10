@@ -159,6 +159,28 @@ RSpec.describe Binxtils::SortableHelper do
       end
     end
 
+    context "title with plain text" do
+      it "renders the title unchanged" do
+        expect(helper.sortable("name", "Full Name")).to include("Full Name")
+        expect(helper.sortable("name", "Manufacturer (other)")).to include("Manufacturer (other)")
+      end
+    end
+
+    context "title with HTML characters" do
+      it "escapes the title" do
+        result = helper.sortable("name", "<script>alert()</script>")
+        expect(result).to_not include("<script>")
+        expect(result).to include("&lt;script&gt;alert()&lt;/script&gt;")
+
+        expect(helper.sortable("name", "Bikes & Skis")).to include("Bikes &amp; Skis")
+      end
+
+      it "renders HTML passed as a block" do
+        result = helper.sortable("name") { "<em>Name</em>".html_safe }
+        expect(result).to include("<em>Name</em>")
+      end
+    end
+
     context "title not passed" do
       it "generates title from column name" do
         expect(helper.sortable("created_at")).to include("Created")
