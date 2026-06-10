@@ -210,10 +210,19 @@ RSpec.describe Binxtils::TimeParser, type: :service do
     end
 
     context "not a date" do
+      let(:not_date_str) { "3fbd3770-1b71-4f21-8647-a1804e404aca" }
+
       it "errors" do
-        expect {
-          subject.parse("3fbd3770-1b71-4f21-8647-a1804e404aca")
-        }.to raise_error(ArgumentError)
+        expect { subject.parse(not_date_str) }.to raise_error(ArgumentError)
+      end
+
+      context "with parse_error: :nil" do
+        it "returns nil" do
+          expect(subject.parse(not_date_str, parse_error: :nil)).to be_nil
+          expect(subject.parse("25:00:00", parse_error: :nil)).to be_nil
+          # parseable strings still parse
+          expect(subject.parse("2024-01-01", parse_error: :nil).to_date).to eq Date.parse("2024-01-01")
+        end
       end
     end
 
@@ -223,6 +232,12 @@ RSpec.describe Binxtils::TimeParser, type: :service do
         # invalid month, appends -01, and re-parses the same string in a loop
         expect { subject.parse("2020-13") }.to raise_error(ArgumentError)
         expect { subject.parse("2020-13-45") }.to raise_error(ArgumentError)
+      end
+
+      context "with parse_error: :nil" do
+        it "returns nil" do
+          expect(subject.parse("2020-13", parse_error: :nil)).to be_nil
+        end
       end
     end
 

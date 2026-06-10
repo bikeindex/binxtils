@@ -10,12 +10,20 @@ module Binxtils
       @default_time_zone ||= ActiveSupport::TimeZone[Rails.application.class.config.time_zone].freeze
     end
 
-    def parse(time_str = nil, time_zone_str = nil, in_time_zone: false)
+    # parse_error: :raise raises unparseable input errors, :nil swallows them
+    def parse(time_str = nil, time_zone_str = nil, in_time_zone: false, parse_error: :raise)
+      parse!(time_str, time_zone_str, in_time_zone:)
+    rescue ArgumentError
+      raise unless parse_error == :nil
+      nil
+    end
+
+    def parse!(time_str = nil, time_zone_str = nil, in_time_zone: false)
       return nil unless time_str.present?
       return time_str if time_str.is_a?(Time)
 
       if looks_like_timestamp?(time_str)
-        return parse("#{time_str}-01-01") if time_str.to_s.length == 4 # Looks like year, valid 8601 format
+        return parse!("#{time_str}-01-01") if time_str.to_s.length == 4 # Looks like year, valid 8601 format
 
         # otherwise it's a timestamp
         time = Time.at(time_str.to_i)
@@ -53,7 +61,7 @@ module Binxtils
         new_str += " #{regex_match["hour"]}:#{regex_match["minute"]}#{regex_match["ampm"]}"
       end
       # Run it through Binxtils::TimeParser again
-      parse(new_str, time_zone_str, in_time_zone:)
+      parse!(new_str, time_zone_str, in_time_zone:)
     end
 
     def looks_like_timestamp?(time_str)
@@ -84,6 +92,6 @@ module Binxtils
       time.in_time_zone(time_zone || ActiveSupport::TimeZone["UTC"])
     end
 
-    conceal :time_in_zone
+    conceal :time_in_zone, :parse!
   end
 end
