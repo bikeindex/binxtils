@@ -28,7 +28,8 @@ RSpec.describe "binxtils:char_count" do
     it "counts non-whitespace characters excluding comments" do
       stdout, status = run_char_count("lib/binxtils/version.rb")
       expect(status).to be_success
-      expect(stdout.strip.to_i).to be_between(31, 35)
+      # 27 chars of module boilerplate, plus the version string itself
+      expect(stdout.strip.to_i).to eq(27 + Binxtils::VERSION.length)
     end
   end
 
