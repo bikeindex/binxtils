@@ -5,7 +5,6 @@ module Binxtils
     extend Functionable
 
     EARLIEST_YEAR = 1900
-    LATEST_YEAR = Time.current.year + 100
 
     def default_time_zone
       @default_time_zone ||= ActiveSupport::TimeZone[Rails.application.class.config.time_zone].freeze
@@ -30,8 +29,8 @@ module Binxtils
       # Try to parse some other, unexpected formats -
       paychex_formatted = %r{(?<month>\d+)/(?<day>\d+)/(?<year>\d+) (?<hour>\d\d):(?<minute>\d\d) (?<ampm>\w\w)}.match(time_str)
       ie11_formatted = %r{(?<month>\d+)/(?<day>\d+)/(?<year>\d+)}.match(time_str)
-      just_date = %r{(?<year>\d{4})[^\d|\w](?<month>\d\d?)}.match(time_str)
-      just_date_backward = %r{(?<month>\d\d?)[^\d|\w](?<year>\d{4})}.match(time_str)
+      just_date = %r{(?<year>\d{4})[^\d\w](?<month>\d\d?)}.match(time_str)
+      just_date_backward = %r{(?<month>\d\d?)[^\d\w](?<year>\d{4})}.match(time_str)
 
       # Get the successful matching regex group, and then reformat it in an expected way
       regex_match = [paychex_formatted, ie11_formatted, just_date, just_date_backward].compact.first
@@ -44,7 +43,7 @@ module Binxtils
 
       # If we end up with an unreasonable year or month, throw an error
       # (an invalid month would otherwise recurse forever, re-matching and re-appending the day)
-      raise e unless new_str.split("-").first.to_i.between?(EARLIEST_YEAR, LATEST_YEAR)
+      raise e unless new_str.split("-").first.to_i.between?(EARLIEST_YEAR, Time.current.year + 100)
       raise e unless regex_match["month"].to_i.between?(1, 12)
 
       # Add the day, if there isn't one
