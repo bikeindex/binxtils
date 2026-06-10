@@ -200,6 +200,15 @@ RSpec.describe Binxtils::TimeParser, type: :service do
       end
     end
 
+    context "malformed date with invalid month" do
+      it "errors instead of recursing forever" do
+        # These previously hit a SystemStackError: just_date matches the
+        # invalid month, appends -01, and re-parses the same string in a loop
+        expect { subject.parse("2020-13") }.to raise_error(ArgumentError)
+        expect { subject.parse("2020-13-45") }.to raise_error(ArgumentError)
+      end
+    end
+
     context "with time_zone" do
       let(:time_zone) { "Central Time (US & Canada)" }
       let(:time) { (Time.current - 5.minutes).in_time_zone(time_zone) }
