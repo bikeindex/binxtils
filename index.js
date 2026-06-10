@@ -236,6 +236,8 @@ export default class TimeLocalizer {
   }
 
   writeTimezoneCookie () {
+    // Not Secure: the value is just a timezone (not sensitive), and Secure
+    // cookies are invisible to document.cookie over plain HTTP local dev
     document.cookie = `timezone=${this.localTimezone}; path=/; max-age=31536000; SameSite=Lax`
   }
 }
