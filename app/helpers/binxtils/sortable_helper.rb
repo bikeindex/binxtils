@@ -31,16 +31,15 @@ module Binxtils
       render_sortable = html_options.key?(:render_sortable) ? html_options[:render_sortable] : !html_options[:skip_sortable]
       return title unless render_sortable
 
-      html_options[:class] = "#{html_options[:class]} sortable-link"
-      direction = (column == sort_column && sort_direction == "desc") ? "asc" : "desc"
+      active = column == sort_column
+      direction = (active && sort_direction == "desc") ? "asc" : "desc"
+      span_content = ((direction == "asc") ? "\u2193" : "\u2191") if active
 
-      if column == sort_column
-        html_options[:class] += " active"
-        span_content = (direction == "asc") ? "\u2193" : "\u2191"
-      end
+      link_options = html_options.except(:render_sortable, :skip_sortable)
+        .merge(class: [html_options[:class], "sortable-link", ("active" if active)].compact.join(" "))
 
       # Titles are escaped (not marked html_safe) - pass a block to render HTML
-      link_to(sortable_url(column, direction), html_options) do
+      link_to(sortable_url(column, direction), link_options) do
         concat(block_given? ? capture(&block) : title)
         concat(content_tag(:span, span_content, class: "sortable-direction"))
       end

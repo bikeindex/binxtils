@@ -159,6 +159,38 @@ RSpec.describe Binxtils::SortableHelper do
       end
     end
 
+    context "with render_sortable: true" do
+      it "doesn't render the control option as an HTML attribute" do
+        result = helper.sortable("name", "Name", render_sortable: true)
+        expect(result).to match(/class=..?sortable-link/)
+        expect(result).to_not include("render_sortable")
+      end
+    end
+
+    context "with skip_sortable: false" do
+      it "doesn't render the control option as an HTML attribute" do
+        expect(helper.sortable("name", "Name", skip_sortable: false)).to_not include("skip_sortable")
+      end
+    end
+
+    context "with a reused html_options hash" do
+      let(:html_options) { {class: "th-link"} }
+
+      it "doesn't mutate the caller's hash" do
+        first_link = helper.sortable("name", "Name", html_options)
+        second_link = helper.sortable("email", "Email", html_options)
+        expect(html_options).to eq({class: "th-link"})
+        expect(first_link.scan("sortable-link").count).to eq 1
+        expect(second_link.scan("sortable-link").count).to eq 1
+      end
+    end
+
+    context "active sort column" do
+      it "adds the active class" do
+        expect(helper.sortable("id")).to match(/class=..?sortable-link active/)
+      end
+    end
+
     context "title with plain text" do
       it "renders the title unchanged" do
         expect(helper.sortable("name", "Full Name")).to include("Full Name")
