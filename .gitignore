@@ -12,10 +12,9 @@ tmp
 node_modules/
 dist/
 
-# Ignore personal .claude settings, but ship the SessionStart hook
+# Ignore personal .claude settings, but ship the shared skills
 .claude/*
-!.claude/hooks/
-!.claude/settings.json
+!.claude/skills/
 
 # Dummy app generated files
 spec/dummy/log/
