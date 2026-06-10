@@ -16,16 +16,15 @@ module Binxtils
       # Set time period
       @period ||= params[:period]
       if @period == "custom"
-        if params[:start_time].present?
-          @start_time = Binxtils::TimeParser.parse(params[:start_time], @timezone)
-          @end_time = Binxtils::TimeParser.parse(params[:end_time], @timezone) || latest_period_date
+        @start_time = parse_param_time(params[:start_time])
+        if @start_time.present?
+          @end_time = parse_param_time(params[:end_time]) || latest_period_date
           @start_time, @end_time = @end_time, @start_time if @start_time > @end_time
         else
           set_time_range_from_period
         end
-      elsif params[:search_at].present?
+      elsif (@search_at = parse_param_time(params[:search_at]))
         @period = "custom"
-        @search_at = Binxtils::TimeParser.parse(params[:search_at], @timezone)
         offset = params[:period].present? ? params[:period].to_i : 10.minutes.to_i
         @start_time = @search_at - offset
         @end_time = @search_at + offset
@@ -38,6 +37,13 @@ module Binxtils
     end
 
     private
+
+    # User-provided times shouldn't 500 the request - return nil for unparseable input
+    def parse_param_time(time_str)
+      Binxtils::TimeParser.parse(time_str, @timezone)
+    rescue ArgumentError
+      nil
+    end
 
     def set_time_range_from_period
       @period = default_period unless PERIOD_TYPES.include?(@period)

@@ -22,9 +22,7 @@ module Binxtils
         time = Time.at(time_str.to_i)
       else
         time_zone = Binxtils::TimeZoneParser.parse(time_zone_str)
-        Time.zone = time_zone
-        time = Time.zone.parse(time_str.to_s) # Assign in time zone
-        Time.zone = default_time_zone
+        time = (time_zone || Time.zone).parse(time_str.to_s) # Assign in time zone
       end
       # Return in time_zone or not
       in_time_zone ? time_in_zone(time, time_str:, time_zone:, time_zone_str:) : time

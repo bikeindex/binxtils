@@ -127,6 +127,33 @@ RSpec.describe Binxtils::SetPeriod do
       end
     end
 
+    context "custom with unparseable start_time" do
+      let(:params) { {period: "custom", start_time: "garbage"} }
+
+      it "falls back to set_time_range_from_period" do
+        expect(controller.period).to eq "all"
+        expect(controller.start_time).to match_time SetPeriodTestController.default_earliest_time
+      end
+
+      context "start_time that raises ArgumentError" do
+        let(:params) { {period: "custom", start_time: "25:00:00"} }
+
+        it "falls back to set_time_range_from_period" do
+          expect(controller.period).to eq "all"
+        end
+      end
+    end
+
+    context "custom with unparseable end_time" do
+      let(:params) { {period: "custom", start_time: "2024-01-01", end_time: "garbage"} }
+
+      it "uses latest_period_date" do
+        expect(controller.period).to eq "custom"
+        expect(controller.start_time).to match_time Binxtils::TimeParser.parse("2024-01-01")
+        expect(controller.end_time).to be_within(1).of Time.current
+      end
+    end
+
     context "search_at" do
       let(:search_time) { "2024-03-15 12:00:00" }
       let(:params) { {search_at: search_time} }
@@ -148,6 +175,15 @@ RSpec.describe Binxtils::SetPeriod do
         parsed = Binxtils::TimeParser.parse(search_time)
         expect(controller.start_time).to match_time(parsed - 3600.seconds)
         expect(controller.end_time).to match_time(parsed + 3600.seconds)
+      end
+    end
+
+    context "search_at unparseable" do
+      let(:params) { {search_at: "garbage"} }
+
+      it "falls back to the default period" do
+        expect(controller.period).to eq "all"
+        expect(controller.search_at).to be_nil
       end
     end
 

@@ -137,12 +137,29 @@ RSpec.describe Binxtils::TimeParser, type: :service do
       end
     end
 
+    context "with Time.zone set to a non-default zone" do
+      before { Time.zone = ActiveSupport::TimeZone["America/Denver"] }
+      after { Time.zone = default_time_zone }
+
+      it "does not clobber Time.zone" do
+        subject.parse("2016-02-08 04:00:00", "America/Chicago")
+        expect(Time.zone.name).to eq "America/Denver"
+      end
+
+      context "without a time_zone argument" do
+        it "parses in the current zone" do
+          expect(subject.parse("2016-02-08 04:00:00").to_i).to eq 1454929200
+          expect(Time.zone.name).to eq "America/Denver"
+        end
+      end
+    end
+
     context "with cray IE 11 time params" do
       let(:target_time) { 1538283600 }
       let(:target_time_in_uk) { 1538262000 }
       let(:time_str) { "09/30/2018" }
 
-      it "parses it, resets the zone over and over again" do
+      it "parses it, without changing the zone" do
         expect(Time.zone).to eq default_time_zone
         expect(subject.parse(time_str, "").to_i).to eq target_time
         expect(Time.zone).to eq default_time_zone
