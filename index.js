@@ -236,6 +236,6 @@ export default class TimeLocalizer {
   }
 
   writeTimezoneCookie () {
-    document.cookie = `timezone=${this.localTimezone}; path=/; max-age=31536000; SameSite=Lax; Secure`
+    document.cookie = `timezone=${this.localTimezone}; path=/; max-age=31536000; SameSite=Lax`
   }
 }

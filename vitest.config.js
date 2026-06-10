@@ -5,10 +5,6 @@ process.env.TZ = 'America/Chicago'
 
 export default defineConfig({
   test: {
-    environment: 'jsdom',
-    // Use an https origin so the Secure timezone cookie is readable in tests
-    environmentOptions: {
-      jsdom: { url: 'https://localhost/' }
-    }
+    environment: 'jsdom'
   }
 })
