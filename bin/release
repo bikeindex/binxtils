@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 VERSION=$1
 
@@ -39,12 +40,14 @@ git add Gemfile.lock lib/binxtils/version.rb
 git commit -m "Bump version for $VERSION"
 git push -u origin "$RELEASE_BRANCH"
 
-gh pr create --base main --title "Bump version for $VERSION" --body "Automated version bump for the $VERSION release."
-gh pr merge "$RELEASE_BRANCH" --squash --auto
+# Capture the PR URL so we can poll by PR identity, which survives the head
+# branch being auto-deleted on merge (branch-name lookups would fail then).
+PR_URL=$(gh pr create --base main --title "Bump version for $VERSION" --body "Automated version bump for the $VERSION release.")
+gh pr merge "$PR_URL" --squash --auto
 
 echo "Waiting for the release PR to merge (auto-merges once CI passes)..."
 while true; do
-  STATE=$(gh pr view "$RELEASE_BRANCH" --json state --jq .state)
+  STATE=$(gh pr view "$PR_URL" --json state --jq .state)
   case "$STATE" in
     MERGED) break ;;
     CLOSED)
