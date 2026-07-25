@@ -5,15 +5,22 @@
   "type": "module",
   "main": "dist/index.js",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./bundle": "./dist/index.bundle.js"
   },
   "files": [
-    "dist/index.js"
+    "dist/index.js",
+    "dist/index.bundle.js"
   ],
   "scripts": {
-    "build": "esbuild index.js --bundle --format=esm --minify --outfile=dist/index.js",
+    "build": "npm run build:esm && npm run build:bundle",
+    "build:esm": "esbuild index.js --bundle --format=esm --minify --external:luxon --outfile=dist/index.js",
+    "build:bundle": "esbuild index.js --bundle --format=esm --minify --outfile=dist/index.bundle.js",
     "prepublishOnly": "npm run build",
     "test": "vitest run"
+  },
+  "peerDependencies": {
+    "luxon": "^3.0.0"
   },
   "devDependencies": {
     "esbuild": "^0.28.0",

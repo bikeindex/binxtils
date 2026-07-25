@@ -59,9 +59,18 @@ end
 
 ## npm package
 
-This repo also publishes `@bikeindex/time-localizer`, an npm package for localizing time elements in the browser. Luxon is bundled into the published package, so consumers don't need to install it separately.
+This repo also publishes `@bikeindex/time-localizer`, an npm package for localizing time elements in the browser. It ships two builds of the same source:
 
-To publish a new version: update the version in `package.json`, then run `npm publish` from the repo root (requires npm login with access to the `@bikeindex` scope). The `prepublishOnly` script automatically builds `dist/index.js` before publishing.
+| Build | Luxon | Use when |
+| --- | --- | --- |
+| `dist/index.js` (default) | external — install it yourself | You have a bundler. Luxon stays deduped with your own copy, so `Settings.defaultLocale`, `Settings.now` etc. apply to both. |
+| `dist/index.bundle.js` | bundled in | You have no bundler (e.g. importmap-rails). One request, nothing to resolve. |
+
+Import the default as `@bikeindex/time-localizer` and the standalone as `@bikeindex/time-localizer/bundle`, or reference either file path directly over a CDN.
+
+Don't use the bundled build alongside your own Luxon: you'd ship two copies, and because Luxon's `Settings` are module-scoped, your global config would silently apply to only one of them.
+
+To publish a new version: update the version in `package.json`, then run `npm publish` from the repo root (requires npm login with access to the `@bikeindex` scope). The `prepublishOnly` script builds both artifacts before publishing.
 
 ## Releasing
 
