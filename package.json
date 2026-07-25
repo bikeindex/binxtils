@@ -1,17 +1,21 @@
 {
   "name": "@bikeindex/time-localizer",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Localizes time elements to the user's timezone using Luxon",
   "type": "module",
   "main": "dist/index.js",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./bundle": "./dist/index.bundle.js"
   },
   "files": [
-    "dist/index.js"
+    "dist/index.js",
+    "dist/index.bundle.js"
   ],
   "scripts": {
-    "build": "esbuild index.js --bundle --format=esm --minify --external:luxon --outfile=dist/index.js",
+    "build": "npm run build:esm && npm run build:bundle",
+    "build:esm": "esbuild index.js --bundle --format=esm --minify --external:luxon --outfile=dist/index.js",
+    "build:bundle": "esbuild index.js --bundle --format=esm --minify --outfile=dist/index.bundle.js",
     "prepublishOnly": "npm run build",
     "test": "vitest run"
   },
