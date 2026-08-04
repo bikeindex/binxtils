@@ -9,6 +9,7 @@ gem "binxtils"
 ## Modules
 
 - **Binxtils::InputNormalizer** - Sanitize and normalize user input strings
+- **Binxtils::Secure** - Constant-time comparison of a value against an expected secret
 - **Binxtils::TimeParser** - Parse fuzzy time/date strings into `Time` objects
 - **Binxtils::TimeZoneParser** - Parse and resolve time zone strings
 
@@ -20,6 +21,7 @@ These modules use [Functionable](https://github.com/sethherr/functionable) and a
 Binxtils::TimeParser.parse("next thursday")
 Binxtils::InputNormalizer.string("  Some Input  ")
 Binxtils::TimeZoneParser.parse("Eastern Time")
+Binxtils::Secure.compare?(params[:token], ENV["WEBHOOK_TOKEN"])
 ```
 
 ### Rails concerns
