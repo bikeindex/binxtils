@@ -35,8 +35,8 @@ fi
 RELEASE_BRANCH="release-v$VERSION"
 git checkout -b "$RELEASE_BRANCH"
 printf "# frozen_string_literal: true\n\nmodule Binxtils\n  VERSION = \"$VERSION\"\nend\n" > ./lib/binxtils/version.rb
-bundle
-git add Gemfile.lock lib/binxtils/version.rb
+bundle # refresh the (gitignored) lockfile so local dev matches the new version
+git add lib/binxtils/version.rb
 git commit -m "Bump version for $VERSION"
 git push -u origin "$RELEASE_BRANCH"
 
