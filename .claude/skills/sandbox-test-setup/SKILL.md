@@ -1,24 +1,20 @@
 ---
 name: sandbox-test-setup
 description: >-
-  Binxtils Ruby + RSpec + npm environment setup. Three environments:
+  Binxtils Ruby + RSpec + npm environment setup. Two environments:
   **(A) local macOS Conductor workspace** (`/Users/…/conductor/workspaces/…`)
   — Ruby is installed via mise but Claude Code's shell sometimes spawns
   subprocesses without the mise shim, so bare `ruby`/`bundle` falls back
   to system 2.6 and fails with `Could not find 'bundler'` or
   `Bundler::RubyVersionMismatch`. Fix is a PATH prefix, not a reinstall.
-  **(B) Conductor cloud sandbox** (`/home/vercel-sandbox/workspace`,
-  Amazon Linux 2023) — nothing is preinstalled, so bare `ruby`/`bundle`/
-  `bin/lint` fail with `env: 'ruby': No such file or directory`. Egress is
-  open (unlike C), so install mise + dnf build deps and let `mise install`
-  compile the pinned Ruby. **(C) Claude Code's Linux web sandbox** — Ruby
-  3.4.9 must be built from a GitHub source clone (`cache.ruby-lang.org` is
-  firewalled), plus a postgres `rails` superuser and the `binxtils_test`
-  database, then `bundle install` and `npm install`. Trigger whenever a
-  session runs `bin/rspec`, `bin/lint`, `bundle`, `npm test`, or the user
-  reports `Could not find 'bundler'`, `Bundler::RubyVersionMismatch`,
-  `env: 'ruby': No such file or directory`, `command not found: rspec`,
-  a postgres connection error, or a missing `binxtils_test` database.
+  **(B) Claude Code's Linux web sandbox** — Ruby 3.4.9 must be built from
+  a GitHub source clone (`cache.ruby-lang.org` is firewalled), plus a
+  postgres `rails` superuser and the `binxtils_test` database, then
+  `bundle install` and `npm install`. Trigger whenever a session runs
+  `bin/rspec`, `bin/lint`, `bundle`, `npm test`, or the user reports
+  `Could not find 'bundler'`, `Bundler::RubyVersionMismatch`,
+  `command not found: rspec`, a postgres connection error, or a missing
+  `binxtils_test` database.
 ---
 
 # Running Ruby + RSpec + npm for Binxtils
@@ -28,9 +24,8 @@ npm package. Tests run with RSpec (`bin/rspec`) and Vitest (`npm test`).
 Postgres is used by the specs (the `binxtils_test` database).
 
 Pick the section matching the environment by its path: macOS paths under
-`/Users/…/conductor/workspaces/…` use **Local macOS**;
-`/home/vercel-sandbox/workspace` on Amazon Linux uses **Conductor cloud
-sandbox**; the Linux web sandbox uses **Claude Code web sandbox**.
+`/Users/…/conductor/workspaces/…` use **Local macOS**; the Linux web
+sandbox uses **Claude Code web sandbox**.
 
 ## Local macOS (Conductor workspace)
 
@@ -63,54 +58,6 @@ bin/rspec                 # Ruby specs
 npm test                  # JavaScript (Vitest) tests
 bin/lint                  # format + lint (bin/lint --no-fix to check only)
 ```
-
-## Conductor cloud sandbox (Amazon Linux)
-
-Identify by the path `/home/vercel-sandbox/workspace` on Amazon Linux 2023
-(`ID_LIKE=fedora`, `dnf`, user `vercel-sandbox` with passwordless `sudo`).
-**Nothing is preinstalled** — no mise, no Ruby, no compiler — so bare
-`ruby`/`bundle`/`bin/lint` fail with `env: 'ruby': No such file or directory`.
-
-Unlike the web sandbox (C), egress here is wide open: `cache.ruby-lang.org`,
-`rubygems.org`, and `registry.npmjs.org` are all reachable. So take mise's
-normal build path — **skip the GitHub-source hand-build below**; it isn't
-needed here.
-
-```bash
-# 1. Compiler + headers (mise/ruby-build compiles Ruby from source)
-sudo dnf install -y gcc gcc-c++ make openssl-devel readline-devel \
-  zlib-devel libyaml-devel libffi-devel gdbm-devel ncurses-devel
-
-# 2. Install mise (not preinstalled)
-curl -fsSL https://mise.run | sh          # -> ~/.local/bin/mise
-
-# 3. Build the Ruby pinned in .tool-versions
-export PATH="$HOME/.local/bin:$PATH"
-mise trust --yes
-mise install
-```
-
-Then per shell:
-
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-eval "$(mise activate bash)"
-ruby --version      # => ruby 3.4.9 ... [x86_64-linux]
-bundle install
-npm install --no-audit --no-fund
-```
-
-If a subprocess drops the mise shim (same harness quirk as Local macOS),
-prefix the install dir directly instead of reactivating:
-
-```bash
-export PATH="$HOME/.local/share/mise/installs/ruby/3.4.9/bin:$PATH"
-```
-
-Postgres isn't preinstalled here either — install the server package from
-dnf (`dnf search postgresql` for the current version suffix), start the
-daemon, then the SQL in **Services + DB** below applies unchanged (that
-section's `service …` wording is web-sandbox specific, the SQL is not).
 
 ## Claude Code web sandbox
 
