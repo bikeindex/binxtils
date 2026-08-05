@@ -16,11 +16,43 @@ Binxtils is a Ruby gem (the npm package's tests use Vitest in
 `index.test.js`). This project uses RSpec; all business logic should be
 tested. Run the suite with `bin/rspec`.
 
+## Run only the specs your change touches
+
+Pass the files or directories you changed — `bin/rspec spec/binxtils/time_parser_spec.rb`.
+A bare `bin/rspec` runs everything including the `type: :system` specs,
+which boot the dummy Rails app. CI runs the full suite.
+
+When something fails outside the files you changed, re-run that spec file
+on its own before treating it as yours. Passing alone means the full run
+was order-dependent; failing alone means it's real — and a real failure
+gets fixed, never excused as pre-existing.
+
 ## What to test (and what not to)
 
 - Tests should either: help make the code correct now, or prevent bugs in the future. Don't add tests that don't do one of those things.
 - Avoid testing private methods (in functionable modules, those are the `conceal`ed methods) — test them through the public surface that calls them.
 - Avoid mocking objects. Drive the real code path with real inputs.
+
+## Stubbing ENV
+
+Never partial-mock `ENV` with `allow(ENV).to receive(:[]).and_call_original` —
+it makes every subsequent `ENV[...]` lookup go through RSpec's message
+router, which is slow and easy to break by forgetting a `.with(...)` branch.
+
+Use `stub_const` against a merged hash instead:
+
+### Good
+
+```ruby
+stub_const("ENV", ENV.to_hash.merge("SECRET_TOKEN" => "test_token"))
+```
+
+### Bad
+
+```ruby
+allow(ENV).to receive(:[]).and_call_original
+allow(ENV).to receive(:[]).with("SECRET_TOKEN").and_return("test_token")
+```
 
 ## Always fix failing tests
 
@@ -116,3 +148,45 @@ end
 ```
 
 The bad version repeats setup, mocks the object, and doesn't communicate what each case represents.
+
+## One example per distinct setup — combine same-setup `it` blocks
+
+`context`/`let`/`before` isolate what *varies*. The corollary runs the other way: if two sibling `it` blocks share the **same** setup — no differing `context`, `before`, or `let` override between them — collapse them into **one** example. Each distinct setup earns exactly one `it`; put all of that setup's assertions in that single block.
+
+Splitting same-setup assertions across sibling `it` blocks re-runs identical setup once per block for zero isolation benefit, and scatters one logical behavior across the file. Two `it` blocks that differ *only* in the argument passed or the assertion — with identical `let`s and no `before` between them — are one example.
+
+After writing a spec, scan each `context`/`describe`: if it holds multiple `it` blocks and they don't each sit behind a distinct `context`/`before`/`let`, merge them.
+
+### Good
+
+```ruby
+context "in America/Chicago" do
+  let(:time_zone) { ActiveSupport::TimeZone["America/Chicago"] }
+
+  it "parses each supported format" do
+    expect(subject.parse("2024-01-15", time_zone)).to eq time_zone.parse("2024-01-15")
+    expect(subject.parse("01/15/2024", time_zone)).to eq time_zone.parse("2024-01-15")
+    expect(subject.parse("2024-01-15 13:00", time_zone)).to eq time_zone.parse("2024-01-15 13:00")
+  end
+end
+```
+
+### Bad
+
+```ruby
+context "in America/Chicago" do
+  let(:time_zone) { ActiveSupport::TimeZone["America/Chicago"] }   # re-built for every it below
+
+  it "parses an ISO date" do
+    expect(subject.parse("2024-01-15", time_zone)).to eq time_zone.parse("2024-01-15")
+  end
+  it "parses a US date" do
+    expect(subject.parse("01/15/2024", time_zone)).to eq time_zone.parse("2024-01-15")
+  end
+  it "parses a datetime" do
+    expect(subject.parse("2024-01-15 13:00", time_zone)).to eq time_zone.parse("2024-01-15 13:00")
+  end
+end
+```
+
+This only merges blocks whose setup is identical. Different setup still means separate examples, each in its own `context` with the `let`/`before` that differs — that's the section above, not a contradiction of it.
