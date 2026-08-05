@@ -31,40 +31,92 @@ if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
   exit 1
 fi
 
-# main is protected, so the version bump goes through a PR
-RELEASE_BRANCH="release-v$VERSION"
-git checkout -b "$RELEASE_BRANCH"
-printf "# frozen_string_literal: true\n\nmodule Binxtils\n  VERSION = \"$VERSION\"\nend\n" > ./lib/binxtils/version.rb
-bundle # refresh the (gitignored) lockfile so local dev matches the new version
-git add lib/binxtils/version.rb
-git commit -m "Bump version for $VERSION"
-git push -u origin "$RELEASE_BRANCH"
+# Every step below skips itself when it's already done, so a release that dies
+# partway through (CI, a network blip, an expired RubyGems login) is resumed by
+# re-running this script with the same version.
 
-# Capture the PR URL so we can poll by PR identity, which survives the head
-# branch being auto-deleted on merge (branch-name lookups would fail then).
-PR_URL=$(gh pr create --base main --title "Bump version for $VERSION" --body "Automated version bump for the $VERSION release.")
-gh pr merge "$PR_URL" --squash --auto
+if grep -q "VERSION = \"$VERSION\"" ./lib/binxtils/version.rb; then
+  echo "==> main is already at $VERSION, skipping the version bump"
+else
+  # main is protected, so the version bump goes through a PR
+  RELEASE_BRANCH="release-v$VERSION"
+  git checkout -b "$RELEASE_BRANCH"
+  printf "# frozen_string_literal: true\n\nmodule Binxtils\n  VERSION = \"$VERSION\"\nend\n" > ./lib/binxtils/version.rb
+  bundle # refreshes the (gitignored) lockfile so local dev matches the new version
+  git add lib/binxtils/version.rb
+  git commit -m "Bump version for $VERSION"
+  git push -u origin "$RELEASE_BRANCH"
 
-echo "Waiting for the release PR to merge (auto-merges once CI passes)..."
-while true; do
-  STATE=$(gh pr view "$PR_URL" --json state --jq .state)
-  case "$STATE" in
-    MERGED) break ;;
-    CLOSED)
-      echo "Error: release PR was closed without merging"
-      exit 1
-      ;;
-    *) sleep 10 ;;
-  esac
-done
+  # Capture the PR URL so we can poll by PR identity, which survives the head
+  # branch being auto-deleted on merge (branch-name lookups would fail then).
+  PR_URL=$(gh pr create --base main --title "Bump version for $VERSION" --body "Automated version bump for the $VERSION release.")
+  gh pr merge "$PR_URL" --squash --auto
 
-git checkout main
-git pull origin main
-git branch -d "$RELEASE_BRANCH"
+  echo "Waiting for the release PR to merge (auto-merges once CI passes)..."
+  while true; do
+    STATE=$(gh pr view "$PR_URL" --json state --jq .state)
+    case "$STATE" in
+      MERGED) break ;;
+      CLOSED)
+        echo "Error: release PR was closed without merging"
+        exit 1
+        ;;
+      *) sleep 10 ;;
+    esac
+  done
 
-git tag v$VERSION
-git push origin v$VERSION
-gem build binxtils.gemspec
-gem push "binxtils-$VERSION.gem" --host https://rubygems.org
-rm "binxtils-$VERSION.gem"
-gh release create "v$VERSION" --title "v$VERSION" --generate-notes
+  git checkout main
+  git pull origin main
+  # squash merging leaves the branch unreachable from main, so -d would refuse it
+  git branch -D "$RELEASE_BRANCH"
+fi
+
+if git rev-parse -q --verify "refs/tags/v$VERSION" > /dev/null; then
+  echo "==> tag v$VERSION already exists locally"
+else
+  git tag "v$VERSION"
+fi
+
+if git ls-remote --exit-code --tags origin "v$VERSION" > /dev/null 2>&1; then
+  echo "==> tag v$VERSION is already on origin"
+else
+  git push origin "v$VERSION"
+fi
+
+GEM_FILE="binxtils-$VERSION.gem"
+# RubyGems caches this for a minute, so a just-published version can still read
+# as missing. no-cache narrows the window; the push below covers what's left.
+published() {
+  curl -sf -o /dev/null -H "Cache-Control: no-cache" \
+    "https://rubygems.org/api/v2/rubygems/binxtils/versions/$VERSION.json"
+}
+
+if published; then
+  echo "==> binxtils $VERSION is already published to RubyGems"
+  rm -f "$GEM_FILE"
+else
+  gem build binxtils.gemspec
+  echo ""
+  echo "Ready to push $GEM_FILE to RubyGems."
+  echo "Not signed in? Run 'gem signin' in another terminal now — 'gem push' will"
+  echo "prompt for your MFA code. Ctrl-C is safe: re-run 'bin/release $VERSION' to resume."
+  read -r -p "Press enter to publish: "
+
+  # A push that fails only because the version is already up there is not an
+  # error worth stopping the release for.
+  PUSH_STATUS=0
+  gem push "$GEM_FILE" --host https://rubygems.org || PUSH_STATUS=$?
+  if [ "$PUSH_STATUS" -ne 0 ] && ! published; then
+    exit "$PUSH_STATUS"
+  fi
+  rm -f "$GEM_FILE"
+fi
+
+if gh release view "v$VERSION" > /dev/null 2>&1; then
+  echo "==> GitHub release v$VERSION already exists"
+else
+  gh release create "v$VERSION" --title "v$VERSION" --generate-notes
+fi
+
+echo ""
+echo "Released $VERSION"
