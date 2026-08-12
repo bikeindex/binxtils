@@ -141,4 +141,15 @@ RSpec.describe Binxtils::InputNormalizer do
       expect(subject.sanitize("Bike &lt;&gt; Ski")).to eq "Bike &lt;&gt; Ski"
     end
   end
+
+  describe "sanitize_with_whitespace" do
+    context "with an html body" do
+      let(:body) { "<html><body style=\"padding:0;margin:0\"><div><p>It&#39;s 5 &lt; 6 &amp; &quot;broken&quot;</p></div></body></html>" }
+      let(:target) { "It's 5 < 6 & \"broken\"" }
+
+      it "is the text with the entities unescaped, and the tags are significant" do
+        expect(subject.sanitize(body)).to eq target
+      end
+    end
+  end
 end
