@@ -142,20 +142,21 @@ RSpec.describe Binxtils::InputNormalizer do
     end
   end
 
-  describe "sanitize_with_whitespace" do
+  describe "plain_text" do
     context "blank" do
       it "is an empty string" do
-        expect(subject.sanitize_with_whitespace(nil)).to eq ""
-        expect(subject.sanitize_with_whitespace("")).to eq ""
-        expect(subject.sanitize_with_whitespace("  \n\n  ")).to eq ""
-        expect(subject.sanitize_with_whitespace("<div>&nbsp;</div>\n<div> </div>")).to eq ""
+        expect(subject.plain_text).to eq ""
+        expect(subject.plain_text(nil)).to eq ""
+        expect(subject.plain_text("")).to eq ""
+        expect(subject.plain_text("  \n\n  ")).to eq ""
+        expect(subject.plain_text("<div>&nbsp;</div>\n<div> </div>")).to eq ""
       end
     end
 
     context "with non-string values" do
       it "casts to a string" do
-        expect(subject.sanitize_with_whitespace(false)).to eq "false"
-        expect(subject.sanitize_with_whitespace(BigDecimal(0))).to eq "0.0"
+        expect(subject.plain_text(false)).to eq "false"
+        expect(subject.plain_text(BigDecimal(0))).to eq "0.0"
       end
     end
 
@@ -163,23 +164,23 @@ RSpec.describe Binxtils::InputNormalizer do
       let(:body) { "<html><body style=\"padding:0;margin:0\"><div><p>It&#39;s 5 &lt; 6 &amp; &quot;broken&quot;</p></div></body></html>" }
       let(:target) { "It's 5 < 6 & \"broken\"" }
 
-      it "is the text with the entities unescaped, and the tags are significant" do
-        expect(subject.sanitize_with_whitespace(body)).to eq target
+      it "is the text with the tags dropped and the entities unescaped" do
+        expect(subject.plain_text(body)).to eq target
       end
     end
 
     context "with entities" do
       it "unescapes them, including the numeric ones" do
-        expect(subject.sanitize_with_whitespace("Bike &amp;amp; Ski")).to eq "Bike &amp; Ski"
-        expect(subject.sanitize_with_whitespace("It&#x27;s")).to eq "It's"
-        expect(subject.sanitize_with_whitespace("Hello&nbsp;&nbsp;world")).to eq "Hello  world"
+        expect(subject.plain_text("Bike &amp;amp; Ski")).to eq "Bike &amp; Ski"
+        expect(subject.plain_text("It&#x27;s")).to eq "It's"
+        expect(subject.plain_text("Hello&nbsp;&nbsp;world")).to eq "Hello  world"
       end
     end
 
     context "with html that isn't text" do
       it "drops the tags and their content" do
-        expect(subject.sanitize_with_whitespace("<script>alert('hi')</script>Text")).to eq "Text"
-        expect(subject.sanitize_with_whitespace("<head><style>p{color:red}</style></head><body>Text</body>")).to eq "Text"
+        expect(subject.plain_text("<script>alert('hi')</script>Text")).to eq "Text"
+        expect(subject.plain_text("<head><style>p{color:red}</style></head><body>Text</body>")).to eq "Text"
       end
     end
 
@@ -191,21 +192,21 @@ RSpec.describe Binxtils::InputNormalizer do
       let(:target) { "Hi Seth,\n\nMy bike was stolen & I'd like it back.\n\nThanks!" }
 
       it "keeps the line breaks, collapsing runs of blank lines into one" do
-        expect(subject.sanitize_with_whitespace(body)).to eq target
+        expect(subject.plain_text(body)).to eq target
       end
     end
 
     context "with indented lines" do
       it "strips each line and the result, keeping the whitespace inside a line" do
-        expect(subject.sanitize_with_whitespace("\n\n    line one  \n\t line two\t\n\n")).to eq "line one\nline two"
-        expect(subject.sanitize_with_whitespace("a\tb   c")).to eq "a\tb   c"
+        expect(subject.plain_text("\n\n    line one  \n\t line two\t\n\n")).to eq "line one\nline two"
+        expect(subject.plain_text("a\tb   c")).to eq "a\tb   c"
       end
     end
 
     context "with raw angle brackets" do
       it "leaves them decoded, unlike sanitize" do
-        expect(subject.sanitize_with_whitespace("5 <6 and 7> 6")).to eq "5 <6 and 7> 6"
-        expect(subject.sanitize_with_whitespace("Bike &lt; Ski")).to eq "Bike < Ski"
+        expect(subject.plain_text("5 <6 and 7> 6")).to eq "5 <6 and 7> 6"
+        expect(subject.plain_text("Bike &lt; Ski")).to eq "Bike < Ski"
       end
     end
   end

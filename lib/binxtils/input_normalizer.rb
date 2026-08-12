@@ -32,7 +32,8 @@ module Binxtils
         .gsub(/\s+/, " ") # remove extra whitespace
     end
 
-    def sanitize_with_whitespace(value)
+    # Plain text, so unlike sanitize: every entity is decoded and angle brackets stay literal
+    def plain_text(value = nil)
       normalize_whitespace(CGI.unescapeHTML(Rails::Html::Sanitizer.full_sanitizer.new.sanitize(value.to_s)))
     end
 
