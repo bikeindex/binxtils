@@ -210,4 +210,36 @@ RSpec.describe Binxtils::InputNormalizer do
       end
     end
   end
+
+  describe "normalize_whitespace" do
+    context "blank" do
+      it "is an empty string" do
+        expect(subject.normalize_whitespace).to eq ""
+        expect(subject.normalize_whitespace(nil)).to eq ""
+        expect(subject.normalize_whitespace("  \n \n  ")).to eq ""
+      end
+    end
+
+    context "with lines that are only a non-breaking space" do
+      let(:body) { "Hi there\n \n \n \nThanks!" }
+      let(:target) { "Hi there\n\nThanks!" }
+
+      it "counts them as blank, collapsing the run into one" do
+        expect(subject.normalize_whitespace(body)).to eq target
+      end
+    end
+
+    context "with indented lines" do
+      it "strips each line and the result, keeping the whitespace inside a line" do
+        expect(subject.normalize_whitespace("\n\n    line one  \n\t line two\t\n\n")).to eq "line one\nline two"
+        expect(subject.normalize_whitespace("a\tb   c")).to eq "a\tb   c"
+      end
+    end
+
+    context "with html" do
+      it "leaves it alone - this is whitespace only" do
+        expect(subject.normalize_whitespace("<b>Hi</b>\n&amp;\n\n\n<i>bye</i>")).to eq "<b>Hi</b>\n&amp;\n\n<i>bye</i>"
+      end
+    end
+  end
 end

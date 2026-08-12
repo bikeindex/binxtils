@@ -37,15 +37,9 @@ module Binxtils
       normalize_whitespace(CGI.unescapeHTML(Rails::Html::Sanitizer.full_sanitizer.new.sanitize(value.to_s)))
     end
 
-    #
-    # private below here
-    #
-
     # An HTML email's "blank" lines are often a &nbsp;, which String#strip doesn't count as whitespace
-    def normalize_whitespace(value)
+    def normalize_whitespace(value = nil)
       value.to_s.tr(" ", " ").lines.map(&:strip).join("\n").gsub(/\n{3,}/, "\n\n").strip
     end
-
-    conceal :normalize_whitespace
   end
 end
