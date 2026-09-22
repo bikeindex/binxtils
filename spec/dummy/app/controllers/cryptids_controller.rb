@@ -6,7 +6,7 @@ class CryptidsController < ApplicationController
 
   def index
     @cryptids = Cryptid.where(first_seen: @time_range)
-      .order(sort_column => sort_direction)
+      .order(sortable_order)
   end
 
   def sortable_columns

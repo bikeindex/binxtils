@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "spec_helper"
+require "rails_helper"
 
 # Minimal controller-like base with Rails stubs
 class SortableTableTestBase
@@ -70,6 +70,32 @@ RSpec.describe Binxtils::SortableTable do
 
       it "falls back to default_direction" do
         expect(controller.sort_direction).to eq "desc"
+      end
+    end
+  end
+
+  describe "sortable_order" do
+    let(:sql) { Cryptid.order(controller.sortable_order).to_sql }
+
+    context "default direction" do
+      it "orders by sort_column with nils last" do
+        expect(sql).to end_with "ORDER BY created_at DESC NULLS LAST"
+      end
+    end
+
+    context "asc" do
+      let(:params) { {direction: "asc"} }
+
+      it "puts nils last" do
+        expect(sql).to end_with "ORDER BY created_at ASC NULLS LAST"
+      end
+    end
+
+    context "arel expression" do
+      let(:sql) { Cryptid.order(controller.sortable_order(Cryptid.arel_table[:name].lower)).to_sql }
+
+      it "orders by the node" do
+        expect(sql).to end_with 'ORDER BY LOWER("cryptids"."name") DESC NULLS LAST'
       end
     end
   end
