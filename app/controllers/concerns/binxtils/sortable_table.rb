@@ -18,6 +18,12 @@ module Binxtils
       %w[asc desc].include?(params[:direction]) ? params[:direction] : default_direction
     end
 
+    # Desc puts nils last, matching asc
+    def sortable_order(expression = sort_column)
+      node = expression.respond_to?(:asc) ? expression : Arel.sql(expression)
+      node.public_send(sort_direction).nulls_last
+    end
+
     def permitted_time_range_columns
       %w[created_at updated_at].freeze
     end

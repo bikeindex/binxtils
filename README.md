@@ -59,6 +59,14 @@ class BikesController < ApplicationController
 end
 ```
 
+Order with `sortable_order`, which applies `sort_direction` and puts nils last in both directions. It takes `sort_column` by default, or an Arel node or SQL string:
+
+```ruby
+Bike.order(sortable_order)
+Bike.order(sortable_order(Bike.arel_table[sort_column].lower))
+Bike.order(sortable_order("COALESCE((data -> 'bike_count')::integer, 0)"))
+```
+
 ## npm package
 
 This repo also publishes `@bikeindex/time-localizer`, an npm package for localizing time elements in the browser. It ships two builds of the same source:
