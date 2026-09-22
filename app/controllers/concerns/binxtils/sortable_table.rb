@@ -18,10 +18,15 @@ module Binxtils
       %w[asc desc].include?(params[:direction]) ? params[:direction] : default_direction
     end
 
-    # Desc puts nils last, matching asc
-    def sortable_order(expression = sort_column)
-      node = expression.respond_to?(:asc) ? expression : Arel.sql(expression)
-      node.public_send(sort_direction).nulls_last
+    # Desc puts nils last, matching asc; not for a model's non-null column, since an index can't serve DESC NULLS LAST
+    def sortable_order(expression = sort_column, nulls_last: !expression.is_a?(Class) || expression.columns_hash[sort_column]&.null != false)
+      node = if expression.is_a?(Class)
+        expression.arel_table[sort_column]
+      else
+        expression.respond_to?(:asc) ? expression : Arel.sql(expression)
+      end
+      ordering = node.public_send(sort_direction)
+      nulls_last ? ordering.nulls_last : ordering
     end
 
     def permitted_time_range_columns
