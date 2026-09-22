@@ -18,7 +18,7 @@ class SortableTableTestController < SortableTableTestBase
   end
 
   def sortable_columns
-    %w[created_at updated_at name]
+    %w[created_at updated_at name first_seen]
   end
 end
 
@@ -96,6 +96,30 @@ RSpec.describe Binxtils::SortableTable do
 
       it "orders by the node" do
         expect(sql).to end_with 'ORDER BY LOWER("cryptids"."name") DESC NULLS LAST'
+      end
+    end
+
+    context "with a model" do
+      let(:sql) { Cryptid.order(controller.sortable_order(Cryptid)).to_sql }
+
+      it "skips nulls last for a non-null column, so an index can serve desc" do
+        expect(sql).to end_with 'ORDER BY "cryptids"."created_at" DESC'
+      end
+
+      context "nullable column" do
+        let(:params) { {sort: "first_seen"} }
+
+        it "puts nils last" do
+          expect(sql).to end_with 'ORDER BY "cryptids"."first_seen" DESC NULLS LAST'
+        end
+      end
+    end
+
+    context "with nulls_last: false" do
+      let(:sql) { Cryptid.order(controller.sortable_order("COALESCE(sightings, 0)", nulls_last: false)).to_sql }
+
+      it "skips nulls last" do
+        expect(sql).to end_with "ORDER BY COALESCE(sightings, 0) DESC"
       end
     end
   end

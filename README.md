@@ -59,12 +59,12 @@ class BikesController < ApplicationController
 end
 ```
 
-Order with `sortable_order`, which applies `sort_direction` and puts nils last in both directions. It takes `sort_column` by default, or an Arel node or SQL string:
+Order with `sortable_order`, which applies `sort_direction` and puts nils last. Pass the model to order by its `sort_column` — non-null columns skip `NULLS LAST`, since an index can't serve `DESC NULLS LAST`. It also takes an Arel node or SQL string, which are treated as nullable unless you pass `nulls_last:`:
 
 ```ruby
-Bike.order(sortable_order)
+Bike.order(sortable_order(Bike))
 Bike.order(sortable_order(Bike.arel_table[sort_column].lower))
-Bike.order(sortable_order("COALESCE((data -> 'bike_count')::integer, 0)"))
+Bike.order(sortable_order("COALESCE((data -> 'bike_count')::integer, 0)", nulls_last: false))
 ```
 
 ## npm package
